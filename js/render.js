@@ -24,14 +24,53 @@ window.Render = (function () {
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  /* "Column 27.43 mm · 324 px" — the page's own unit first, then pixels at the
-     export resolution. Pixel documents get millimetres as the second reading. */
-  function measure(name, v, s) {
-    var primary = Units.format(v, s.unit) + ' ' + s.unit;
+  /* "27.43mm/324px" — the page's own unit, then pixels at the export
+     resolution. Pixel documents get millimetres as the second reading. */
+  function pair(v, s) {
+    var primary = Units.format(v, s.unit) + s.unit;
     var secondary = s.unit === 'px'
-      ? Units.format(Units.convert(v, 'px', 'mm'), 'mm') + ' mm'
-      : Math.round(Units.toPixels(v, s.unit, s.exp.dpi)) + ' px';
-    return name + ' ' + primary + ' · ' + secondary;
+      ? Units.format(Units.convert(v, 'px', 'mm'), 'mm') + 'mm'
+      : Math.round(Units.toPixels(v, s.unit, s.exp.dpi)) + 'px';
+    return primary + '/' + secondary;
+  }
+
+  function measure(name, v, s) { return name + ' ' + pair(v, s); }
+
+  /* Monospace advance is a dependable 0.6 em, so text can be fitted without
+     measuring it for real — which the renderer has no way to do anyway. */
+  function textWidth(text, fs) { return text.length * fs * 0.6; }
+
+  function hText(s, g) {
+    var p = ['W ' + pair(s.w, s)];
+    if (s.bleedOn && (s.bleed.i || s.bleed.o))
+      p.push('bleed ' + (s.bleed.i === s.bleed.o ? pair(s.bleed.i, s)
+        : pair(s.bleed.i, s) + ' / ' + pair(s.bleed.o, s)));
+    if (s.marginsOn && g.marginsFit) {
+      p.push('margin ' + (s.margins.i === s.margins.o ? pair(s.margins.i, s)
+        : pair(s.margins.i, s) + ' / ' + pair(s.margins.o, s)));
+      p.push('content ' + pair(g.marginBox.w, s));
+    }
+    if (s.cols > 0 && g.colsFit) p.push(s.cols + ' col ' + pair(g.colW, s));
+    if (s.cols > 1 && g.colsFit) p.push('gutter ' + pair(s.colGutter, s));
+    if (s.unit !== 'px') p.push('@' + s.exp.dpi + 'dpi');
+    return p.join('  ·  ');
+  }
+
+  function vText(s, g) {
+    var p = ['H ' + pair(s.h, s)];
+    if (s.bleedOn && (s.bleed.t || s.bleed.b))
+      p.push('bleed ' + (s.bleed.t === s.bleed.b ? pair(s.bleed.t, s)
+        : pair(s.bleed.t, s) + ' / ' + pair(s.bleed.b, s)));
+    if (s.marginsOn && g.marginsFit) {
+      p.push('margin ' + (s.margins.t === s.margins.b ? pair(s.margins.t, s)
+        : pair(s.margins.t, s) + ' / ' + pair(s.margins.b, s)));
+      p.push('content ' + pair(g.marginBox.h, s));
+    }
+    if (s.rows > 0 && g.rowsFit) p.push(s.rows + ' row ' + pair(g.rowH, s));
+    if (s.rows > 1 && g.rowsFit) p.push('gutter ' + pair(s.rowGutter, s));
+    if (s.baselineOn && g.baselines > 0)
+      p.push('baseline ' + pair(s.baseline, s) + ' ×' + g.baselines);
+    return p.join('  ·  ');
   }
 
   /* All boxes in document units. Origin is the top-left of the exported canvas. */
@@ -70,95 +109,81 @@ window.Render = (function () {
       hair: Math.max(s.w, s.h) / 800
     };
 
-    /* The measurement band lives entirely outside the page, so its labels can
-       never collide with the guides — and one measure per band row means they
-       can't collide with each other either. */
-    g.dfs = Math.max(s.w, s.h) / 80;
-    g.step = g.dfs * 2.5;
-    g.hMeasures = s.exp.dims ? horizontalMeasures(s, g) : [];
-    g.vMeasures = s.exp.dims ? verticalMeasures(s, g) : [];
-
-    var padR = g.vMeasures.length ? g.step * (g.vMeasures.length + 0.9) : 0;
-    var padB = g.hMeasures.length ? g.step * (g.hMeasures.length + 0.9) : 0;
-
-    g.canvasW = pageW + padR;
-    g.canvasH = pageH + padB;
-    g.pageAreaW = pageW;
-    g.pageAreaH = pageH;
+    g.canvasW = pageW;
+    g.canvasH = pageH;
     return g;
   }
 
   function colX(g, s, i) { return g.guide.x + i * (g.colW + s.colGutter); }
   function rowY(g, s, j) { return g.guide.y + j * (g.rowH + s.rowGutter); }
 
-  function horizontalMeasures(s, g) {
-    var out = [{ a: g.page.x, b: g.page.x + g.page.w, t: measure('Page W', s.w, s) }];
-    if (s.bleedOn && s.bleed.i > 0)
-      out.push({ a: g.bleedBox.x, b: g.page.x, t: measure('Bleed L', s.bleed.i, s) });
-    if (s.marginsOn && g.marginsFit) {
-      out.push({ a: g.page.x, b: g.marginBox.x, t: measure(s.facing ? 'Inside' : 'Margin L', s.margins.i, s) });
-      out.push({ a: g.marginBox.x, b: g.marginBox.x + g.marginBox.w, t: measure('Content W', g.marginBox.w, s) });
-      out.push({ a: g.marginBox.x + g.marginBox.w, b: g.page.x + g.page.w, t: measure(s.facing ? 'Outside' : 'Margin R', s.margins.o, s) });
-    }
-    if (s.cols > 0 && g.colsFit)
-      out.push({ a: colX(g, s, 0), b: colX(g, s, 0) + g.colW, t: measure('Column', g.colW, s) });
-    if (s.cols > 1 && g.colsFit)
-      out.push({ a: colX(g, s, 0) + g.colW, b: colX(g, s, 1), t: measure('Col gutter', s.colGutter, s) });
-    return out;
-  }
-
-  function verticalMeasures(s, g) {
-    var out = [{ a: g.page.y, b: g.page.y + g.page.h, t: measure('Page H', s.h, s) }];
-    if (s.bleedOn && s.bleed.t > 0)
-      out.push({ a: g.bleedBox.y, b: g.page.y, t: measure('Bleed T', s.bleed.t, s) });
-    if (s.marginsOn && g.marginsFit) {
-      out.push({ a: g.page.y, b: g.marginBox.y, t: measure('Margin T', s.margins.t, s) });
-      out.push({ a: g.marginBox.y, b: g.marginBox.y + g.marginBox.h, t: measure('Content H', g.marginBox.h, s) });
-      out.push({ a: g.marginBox.y + g.marginBox.h, b: g.page.y + g.page.h, t: measure('Margin B', s.margins.b, s) });
-    }
-    if (s.rows > 0 && g.rowsFit)
-      out.push({ a: rowY(g, s, 0), b: rowY(g, s, 0) + g.rowH, t: measure('Row', g.rowH, s) });
-    if (s.rows > 1 && g.rowsFit)
-      out.push({ a: rowY(g, s, 0) + g.rowH, b: rowY(g, s, 1), t: measure('Row gutter', s.rowGutter, s) });
-    if (s.baselineOn && s.baseline > 0) {
-      var y0 = g.guide.y + s.baselineStart;
-      out.push({ a: y0, b: y0 + s.baseline, t: measure('Baseline', s.baseline, s) });
-    }
-    return out;
-  }
-
   function rect(box, attrs) {
     return '<rect x="' + n(box.x) + '" y="' + n(box.y) + '" width="' + n(box.w) +
       '" height="' + n(box.h) + '" ' + attrs + '/>';
   }
 
-  /* Monospace advance is a reliable ~0.6em, so labels can be kept inside the
-     canvas without measuring text for real. */
-  function clamp(centre, text, fs, limit) {
-    var half = text.length * fs * 0.6 / 2 + fs * 0.3;
-    return Math.min(Math.max(centre, half), Math.max(half, limit - half));
+  /* Measurements print inside the page. The margin strips are the only bands
+     with no column, row or baseline guide running through them, so that is
+     where the readings go — sized to the strip, never spilling past the trim.
+     When a strip is too shallow to hold legible type (or margins are off, or
+     the guides are fitted to the page) the reading moves just inside the last
+     row / last column and takes a backing plate with it, so it still never
+     sits on top of a guide. */
+  function place(s, g, text, axis) {
+    var span = Math.max(s.w, s.h);
+    var maxFs = span / 85, minFs = span / 175;
+    var inset = span * 0.012;
+    var useStrip = s.marginsOn && s.fitTo !== 'page' && g.marginsFit;
+    var strip = useStrip ? (axis === 'h' ? s.margins.b : s.margins.o) : 0;
+    var inStrip = strip * 0.34 >= minFs;
+
+    /* The run starts at the content edge and ends at the trim, so the type has
+       to be sized against that remaining length — not the whole page — or it
+       overflows the trim on the right. */
+    var start, along;
+    if (axis === 'h') {
+      start = useStrip ? g.marginBox.x : g.page.x + inset;
+      along = (g.page.x + g.page.w - inset) - start;
+    } else {
+      start = useStrip ? g.marginBox.y + g.marginBox.h : g.page.y + g.page.h - inset;
+      along = start - (g.page.y + inset);
+    }
+
+    var fs = Math.min(maxFs, along / (text.length * 0.6), inStrip ? strip * 0.34 : maxFs);
+    return { fs: fs, strip: strip, inStrip: inStrip, useStrip: useStrip,
+             start: start, width: textWidth(text, fs) };
   }
 
-  function dimH(mm, y, g, C) {
-    var fs = g.dfs, tick = fs * 0.32;
-    var tx = clamp((mm.a + mm.b) / 2, mm.t, fs, g.canvasW);
-    return '<path d="M' + n(mm.a) + ' ' + n(y - tick) + 'V' + n(y + tick) +
-      'M' + n(mm.a) + ' ' + n(y) + 'H' + n(mm.b) +
-      'M' + n(mm.b) + ' ' + n(y - tick) + 'V' + n(y + tick) +
-      '" fill="none" stroke="' + C.dim + '" stroke-width="' + n(g.hair * 0.9) + '"/>' +
-      '<text x="' + n(tx) + '" y="' + n(y - fs * 0.5) + '" text-anchor="middle">' + esc(mm.t) + '</text>';
+  function hLine(s, g) {
+    var text = hText(s, g);
+    var p = place(s, g, text, 'h');
+    var x = p.start, y, plate = '';
+
+    if (p.inStrip) {
+      y = g.page.y + g.page.h - p.strip / 2 + p.fs * 0.35;
+    } else {
+      y = g.page.y + g.page.h - (p.useStrip ? s.margins.b : 0) - p.fs * 0.7;
+      plate = rect({ x: x - p.fs * 0.35, y: y - p.fs * 0.95, w: p.width + p.fs * 0.7, h: p.fs * 1.35 },
+        'fill="#ffffff" fill-opacity="0.9"');
+    }
+    return plate + '<text x="' + n(x) + '" y="' + n(y) + '" font-size="' + n(p.fs) +
+      '">' + esc(text) + '</text>';
   }
 
-  function dimV(mm, x, g, C) {
-    var fs = g.dfs, tick = fs * 0.32;
-    var ty = clamp((mm.a + mm.b) / 2, mm.t, fs, g.canvasH);
-    var lx = x - fs * 0.5;
-    return '<path d="M' + n(x - tick) + ' ' + n(mm.a) + 'H' + n(x + tick) +
-      'M' + n(x) + ' ' + n(mm.a) + 'V' + n(mm.b) +
-      'M' + n(x - tick) + ' ' + n(mm.b) + 'H' + n(x + tick) +
-      '" fill="none" stroke="' + C.dim + '" stroke-width="' + n(g.hair * 0.9) + '"/>' +
-      '<text x="' + n(lx) + '" y="' + n(ty) + '" text-anchor="middle" transform="rotate(-90 ' +
-      n(lx) + ' ' + n(ty) + ')">' + esc(mm.t) + '</text>';
+  function vLine(s, g) {
+    var text = vText(s, g);
+    var p = place(s, g, text, 'v');
+    var y = p.start, x, plate = '';
+
+    if (p.inStrip) {
+      x = g.page.x + g.page.w - p.strip / 2 + p.fs * 0.35;
+    } else {
+      x = g.page.x + g.page.w - (p.useStrip ? s.margins.o : 0) - p.fs * 0.7;
+      plate = rect({ x: x - p.fs * 0.95, y: y - p.width - p.fs * 0.35, w: p.fs * 1.35, h: p.width + p.fs * 0.7 },
+        'fill="#ffffff" fill-opacity="0.9"');
+    }
+    return plate + '<text x="' + n(x) + '" y="' + n(y) + '" font-size="' + n(p.fs) +
+      '" transform="rotate(-90 ' + n(x) + ' ' + n(y) + ')">' + esc(text) + '</text>';
   }
 
   /* opts: { sizing: 'unit' | {w,h} , layers: {...} } */
@@ -189,7 +214,7 @@ window.Render = (function () {
     /* paper */
     if (e.paper) {
       var sheet = (e.includeBleed && s.bleedOn)
-        ? { x: 0, y: 0, w: g.pageAreaW, h: g.pageAreaH } : g.page;
+        ? { x: 0, y: 0, w: g.canvasW, h: g.canvasH } : g.page;
       o.push('<g id="paper">' + rect(sheet, 'fill="#ffffff"') + '</g>');
     }
 
@@ -271,17 +296,10 @@ window.Render = (function () {
       o.push('<g id="labels">' + lparts.join('') + '</g>');
     }
 
-    /* measurements, in their own band clear of the page */
-    if (e.dims && (g.hMeasures.length || g.vMeasures.length)) {
-      var dparts = [];
-      for (var hi = 0; hi < g.hMeasures.length; hi++) {
-        dparts.push(dimH(g.hMeasures[hi], g.pageAreaH + g.step * (hi + 1), g, C));
-      }
-      for (var vi = 0; vi < g.vMeasures.length; vi++) {
-        dparts.push(dimV(g.vMeasures[vi], g.pageAreaW + g.step * (vi + 1), g, C));
-      }
+    /* measurements, printed inside the page */
+    if (e.dims) {
       o.push('<g id="measurements" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" ' +
-        'font-size="' + n(g.dfs) + '" fill="' + C.dim + '">' + dparts.join('') + '</g>');
+        'fill="' + C.dim + '">' + hLine(s, g, C) + vLine(s, g, C) + '</g>');
     }
 
     o.push('</svg>');

@@ -13,7 +13,7 @@
 <!-- ?v= must be bumped with every release: the HTML is served uncached but the
      assets are cached for an hour, so without it a returning visitor gets new
      markup wired to stale CSS and JS. -->
-<link rel="stylesheet" href="./styles.css?v=0.2">
+<link rel="stylesheet" href="./styles.css?v=0.2.1">
 </head>
 <body>
 
@@ -316,7 +316,7 @@
         <label class="check"><input type="checkbox" id="paper"><span class="box"></span>Include white paper</label>
         <label class="check"><input type="checkbox" id="fills" checked><span class="box"></span>Tint column &amp; row fields</label>
         <label class="check"><input type="checkbox" id="labels"><span class="box"></span>Number columns &amp; rows</label>
-        <label class="check"><input type="checkbox" id="dims"><span class="box"></span>Print measurements <em>(adds a margin around the page)</em></label>
+        <label class="check"><input type="checkbox" id="dims"><span class="box"></span>Print measurements <em>(in the margins)</em></label>
 
         <button class="primary" id="btnDownload" type="button">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -360,10 +360,10 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="./js/units.js?v=0.2"></script>
-<script src="./js/presets.js?v=0.2"></script>
-<script src="./js/render.js?v=0.2"></script>
-<script src="./js/export.js?v=0.2"></script>
-<script src="./js/app.js?v=0.2"></script>
+<script src="./js/units.js?v=0.2.1"></script>
+<script src="./js/presets.js?v=0.2.1"></script>
+<script src="./js/render.js?v=0.2.1"></script>
+<script src="./js/export.js?v=0.2.1"></script>
+<script src="./js/app.js?v=0.2.1"></script>
 </body>
 </html>
