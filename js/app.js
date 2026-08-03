@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var STORE = 'grid.state.v2';
+  var STORE = 'grid.state.v3';
   var $ = function (id) { return document.getElementById(id); };
 
   /* ---------------------------------------------------------------- state */
@@ -11,15 +11,18 @@
       unit: 'mm',
       w: 210, h: 297,
       orientation: 'portrait',
-      facing: true,
+      facing: false,
       cols: 6, colGutter: 4, rows: 6, rowGutter: 4,
       fitTo: 'margins',
+      marginsOn: true,
       margins: { t: 12.7, b: 12.7, i: 12.7, o: 12.7 }, marginsLinked: true,
+      bleedOn: false,
       bleed: { t: 3, b: 3, i: 3, o: 3 }, bleedLinked: true,
-      layers: { trim: true, bleed: true, margins: true, cols: true, rows: true },
+      baselineOn: false, baseline: 4.233, baselineStart: 0,
+      layers: { trim: true, bleed: true, margins: true, cols: true, rows: true, baseline: true },
       style: 'color',
       exp: { svg: true, png: true, jpg: false, dpi: 300, scale: 2,
-             includeBleed: true, paper: false, fills: true, labels: false }
+             includeBleed: true, paper: false, fills: true, labels: false, dims: false }
     };
   }
 
@@ -64,6 +67,10 @@
                  get: function () { return S.colGutter; }, set: function (v) { S.colGutter = v; } },
     rowGutter: { kind: 'len', min: 0, marks: 'grid',
                  get: function () { return S.rowGutter; }, set: function (v) { S.rowGutter = v; } },
+    baseline: { kind: 'len', min: 0,
+                get: function () { return S.baseline; }, set: function (v) { S.baseline = v; } },
+    baselineStart: { kind: 'len', min: 0,
+                     get: function () { return S.baselineStart; }, set: function (v) { S.baselineStart = v; } },
     mT: margin('t'), mB: margin('b'), mI: margin('i'), mO: margin('o'),
     bT: bleed('t'), bB: bleed('b'), bI: bleed('i'), bO: bleed('o')
   };
@@ -138,8 +145,9 @@
     if (!p) return;
     var from = S.unit;
     S.unit = p.unit;
-    S.colGutter = Units.convert(S.colGutter, from, S.unit);
-    S.rowGutter = Units.convert(S.rowGutter, from, S.unit);
+    ['colGutter', 'rowGutter', 'baseline', 'baselineStart'].forEach(function (k) {
+      S[k] = Units.convert(S[k], from, S.unit);
+    });
     /* A preset owns its stated orientation — "Desktop — 1440 × 1024" should
        never come out portrait. The toggle flips it afterwards if you want. */
     S.w = p.w; S.h = p.h;
@@ -161,7 +169,7 @@
   function changeUnit(to) {
     var from = S.unit;
     if (from === to) return;
-    ['w', 'h', 'colGutter', 'rowGutter'].forEach(function (k) {
+    ['w', 'h', 'colGutter', 'rowGutter', 'baseline', 'baselineStart'].forEach(function (k) {
       S[k] = Units.convert(S[k], from, to);
     });
     ['margins', 'bleed'].forEach(function (grp) {
@@ -211,6 +219,8 @@
     bits.push('<span><b>Content</b> ' + f(g.marginBox.w) + ' × ' + f(g.marginBox.h) + ' ' + u + '</span>');
     if (S.cols > 0 && g.colsFit) bits.push('<span><b>Column</b> ' + f(g.colW) + ' ' + u + '</span>');
     if (S.rows > 0 && g.rowsFit) bits.push('<span><b>Row</b> ' + f(g.rowH) + ' ' + u + '</span>');
+    if (S.baselineOn && g.baselines > 0)
+      bits.push('<span><b>Baseline</b> ' + f(S.baseline) + ' ' + u + ' × ' + g.baselines + '</span>');
     bits.push('<span><b>Raster</b> ' + px.w + ' × ' + px.h + ' px</span>');
 
     if (!g.marginsFit) bits.push('<span class="warn">Margins exceed the page</span>');
@@ -242,16 +252,30 @@
     $('mLink').classList.toggle('on', S.marginsLinked);
     $('bLink').classList.toggle('on', S.bleedLinked);
 
+    [['marginsOn', 'sectMargins'], ['bleedOn', 'sectBleed'], ['baselineOn', 'sectBaseline']]
+      .forEach(function (pair) {
+        var sw = $(pair[0]), on = !!S[pair[0]];
+        sw.classList.toggle('on', on);
+        sw.setAttribute('aria-checked', on ? 'true' : 'false');
+        $(pair[1]).classList.toggle('off', !on);
+      });
+    $('incBleedRow').classList.toggle('muted', !S.bleedOn);
+
     document.querySelectorAll('#fitTo button').forEach(function (b) {
       b.classList.toggle('on', b.dataset.v === S.fitTo);
     });
+    /* a visibility chip is meaningless while its feature is switched off */
+    var active = { margins: S.marginsOn, bleed: S.bleedOn, baseline: S.baselineOn };
     document.querySelectorAll('#legend .chip').forEach(function (b) {
-      b.classList.toggle('on', !!S.layers[b.dataset.layer]);
+      var k = b.dataset.layer;
+      b.classList.toggle('on', !!S.layers[k]);
+      b.classList.toggle('muted', active[k] === false);
     });
 
     $('fSvg').checked = S.exp.svg; $('fPng').checked = S.exp.png; $('fJpg').checked = S.exp.jpg;
     $('incBleed').checked = S.exp.includeBleed; $('paper').checked = S.exp.paper;
     $('fills').checked = S.exp.fills; $('labels').checked = S.exp.labels;
+    $('dims').checked = S.exp.dims;
     $('dpi').value = String(S.exp.dpi); $('scale').value = String(S.exp.scale);
     $('styleSel').value = S.style;
 
@@ -361,8 +385,19 @@
     });
 
     [['fSvg', 'svg'], ['fPng', 'png'], ['fJpg', 'jpg'], ['incBleed', 'includeBleed'],
-     ['paper', 'paper'], ['fills', 'fills'], ['labels', 'labels']].forEach(function (pair) {
+     ['paper', 'paper'], ['fills', 'fills'], ['labels', 'labels'], ['dims', 'dims']].forEach(function (pair) {
       $(pair[0]).addEventListener('change', function () { S.exp[pair[1]] = this.checked; refresh(); });
+    });
+
+    /* section switches — they sit inside the collapse header, so swallow the click */
+    ['marginsOn', 'bleedOn', 'baselineOn'].forEach(function (key) {
+      $(key).addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        S[key] = !S[key];
+        if (S[key]) this.closest('.sect').classList.remove('closed');
+        zoom.mode = 'fit';
+        refresh();
+      });
     });
     $('dpi').addEventListener('change', function () { S.exp.dpi = parseInt(this.value, 10); refresh(); });
     $('scale').addEventListener('change', function () { S.exp.scale = parseInt(this.value, 10); refresh(); });

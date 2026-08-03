@@ -38,6 +38,7 @@ html.theme-light {
   --g-margin: #ff3ea5;
   --g-col:    #7c6cf6;
   --g-row:    #22c7d6;
+  --g-base:   #e8a33d;
   --pad: 18px;
 }
 
@@ -71,6 +72,11 @@ button { cursor: pointer; }
   color: var(--c-faint); text-transform: uppercase; margin-bottom: 3px;
 }
 .topbar h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.015em; line-height: 1.1; }
+.rev {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0;
+  color: var(--c-faint); background: var(--c-panel); border: 1px solid var(--c-border-strong);
+  border-radius: 5px; padding: 2px 6px; vertical-align: 3px; margin-left: 4px;
+}
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
 
 .ghost-btn {
@@ -110,6 +116,25 @@ button { cursor: pointer; }
 .sect.closed .tw { transform: rotate(-90deg); }
 .sect.closed .sect-body { display: none; }
 .sect-body { padding: 0 var(--pad) 16px; }
+
+/* section on/off switch — a disabled section keeps its values but stops
+   contributing to the geometry */
+.sw {
+  margin-left: auto; flex: none; width: 30px; height: 17px; border-radius: 9px;
+  background: var(--c-panel2); border: 1px solid var(--c-border-strong);
+  position: relative; padding: 0; transition: .15s;
+}
+.sw i {
+  position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--c-faint); transition: .15s;
+}
+.sw:hover { border-color: var(--c-faint); }
+.sw.on { background: color-mix(in srgb, var(--c-green) 26%, transparent); border-color: var(--c-green); }
+.sw.on i { transform: translateX(13px); background: var(--c-green); }
+.sw:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-green) 35%, transparent); }
+.sect.off .sect-body { opacity: .38; pointer-events: none; }
+
+.hint { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--c-faint); }
 
 .field { margin-bottom: 12px; min-width: 0; }
 .field.hide { display: none; }
@@ -215,6 +240,7 @@ button { cursor: pointer; }
 .check input:checked + .box::after { opacity: 1; transform: rotate(-45deg) scale(1); }
 .check input:focus-visible + .box { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-green) 35%, transparent); }
 .check:hover { color: var(--c-ink); }
+.check.muted { opacity: .4; }
 .fmts { display: grid; gap: 0; }
 
 /* primary */
@@ -250,6 +276,8 @@ button { cursor: pointer; }
 .chip:hover { border-color: var(--c-faint); }
 .chip.on { color: var(--c-ink); border-color: var(--c-border-strong); background: var(--c-panel); }
 .chip.on i { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent); }
+/* the feature itself is switched off, so the visibility toggle has nothing to show */
+.chip.muted { opacity: .32; }
 
 .zoom { display: flex; align-items: center; gap: 2px; background: var(--c-panel); border: 1px solid var(--c-border-strong); border-radius: 8px; padding: 3px; }
 .zoom button { border: 0; background: transparent; color: var(--c-sub); width: 26px; height: 24px; border-radius: 5px; font-size: 15px; line-height: 1; }

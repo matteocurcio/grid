@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Grid — Layout System Generator</title>
-<meta name="description" content="Generate print and screen layout grids — margins, bleed, columns, rows — and export them as SVG, transparent PNG or JPG.">
+<meta name="description" content="Generate print and screen layout grids — margins, bleed, columns, rows, baseline — and export them as SVG, transparent PNG or JPG.">
 <meta name="theme-color" content="#1c1c1c">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c1c1c'/%3E%3Cg stroke='%233ecf8e' stroke-width='2'%3E%3Cpath d='M6 6h20v20H6z' fill='none'/%3E%3Cpath d='M13 6v20M19 6v20M6 13h20M6 19h20' opacity='.55'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +17,7 @@
 <header class="topbar">
   <div class="brand">
     <div class="eyebrow">GRID · MATTEOCURCIO</div>
-    <h1>Layout Grid Generator</h1>
+    <h1>Layout Grid Generator <span class="rev">rev0.2</span></h1>
   </div>
   <div class="topbar-actions">
     <button class="ghost-btn" id="btnReset" type="button" title="Reset to defaults">Reset</button>
@@ -50,7 +50,7 @@
           <div class="field">
             <label for="w">Width</label>
             <div class="numwrap" data-num="w">
-              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase width"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease width"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase width"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease width"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
               <input type="text" id="w" inputmode="decimal" value="210">
               <span class="unit" data-unitlabel>mm</span>
             </div>
@@ -71,7 +71,7 @@
           <div class="field">
             <label for="h">Height</label>
             <div class="numwrap" data-num="h">
-              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase height"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease height"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase height"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease height"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
               <input type="text" id="h" inputmode="decimal" value="297">
               <span class="unit" data-unitlabel>mm</span>
             </div>
@@ -89,7 +89,7 @@
           </div>
         </div>
 
-        <label class="check"><input type="checkbox" id="facing" checked><span class="box"></span>Facing Pages <em>(inside / outside margins)</em></label>
+        <label class="check"><input type="checkbox" id="facing"><span class="box"></span>Facing Pages <em>(inside / outside margins)</em></label>
       </div>
     </section>
 
@@ -108,14 +108,14 @@
           <div class="field">
             <label for="cols">Columns</label>
             <div class="numwrap" data-num="cols">
-              <span class="stepper"><button type="button" data-dir="1" aria-label="More columns"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Fewer columns"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="More columns"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Fewer columns"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
               <input type="text" id="cols" inputmode="numeric" value="12">
             </div>
           </div>
           <div class="field">
             <label for="colGutter">Column Gutter</label>
             <div class="numwrap" data-num="colGutter">
-              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase column gutter"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease column gutter"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase column gutter"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease column gutter"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
               <input type="text" id="colGutter" inputmode="decimal" value="4.233">
               <span class="unit" data-unitlabel>mm</span>
             </div>
@@ -123,14 +123,14 @@
           <div class="field">
             <label for="rows">Rows</label>
             <div class="numwrap" data-num="rows">
-              <span class="stepper"><button type="button" data-dir="1" aria-label="More rows"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Fewer rows"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="More rows"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Fewer rows"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
               <input type="text" id="rows" inputmode="numeric" value="0">
             </div>
           </div>
           <div class="field">
             <label for="rowGutter">Row Gutter</label>
             <div class="numwrap" data-num="rowGutter">
-              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase row gutter"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease row gutter"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase row gutter"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease row gutter"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
               <input type="text" id="rowGutter" inputmode="decimal" value="4.233">
               <span class="unit" data-unitlabel>mm</span>
             </div>
@@ -147,36 +147,39 @@
       </div>
     </section>
 
-    <section class="sect">
-      <div class="sect-head" data-toggle><svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Margins</div>
+    <section class="sect" id="sectMargins">
+      <div class="sect-head" data-toggle>
+        <svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Margins
+        <button type="button" class="sw on" id="marginsOn" role="switch" aria-checked="true" aria-label="Enable margins"><i></i></button>
+      </div>
       <div class="sect-body">
         <div class="linkgrid">
           <div class="grid2">
             <div class="field">
               <label for="mT">Top</label>
               <div class="numwrap" data-num="mT">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase top margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease top margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase top margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease top margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
                 <input type="text" id="mT" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
             <div class="field">
               <label for="mB">Bottom</label>
               <div class="numwrap" data-num="mB">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase bottom margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease bottom margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase bottom margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease bottom margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
                 <input type="text" id="mB" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
             <div class="field">
-              <label for="mI" data-mlabel="in">Inside</label>
+              <label for="mI" data-mlabel="in">Left</label>
               <div class="numwrap" data-num="mI">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase inside margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease inside margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase inside margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease inside margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
                 <input type="text" id="mI" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
             <div class="field">
-              <label for="mO" data-mlabel="out">Outside</label>
+              <label for="mO" data-mlabel="out">Right</label>
               <div class="numwrap" data-num="mO">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase outside margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease outside margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase outside margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease outside margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
                 <input type="text" id="mO" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
@@ -188,37 +191,40 @@
       </div>
     </section>
 
-    <section class="sect">
-      <div class="sect-head" data-toggle><svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Bleed</div>
+    <section class="sect" id="sectBleed">
+      <div class="sect-head" data-toggle>
+        <svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Bleed
+        <button type="button" class="sw" id="bleedOn" role="switch" aria-checked="false" aria-label="Enable bleed"><i></i></button>
+      </div>
       <div class="sect-body">
         <div class="linkgrid">
           <div class="grid2">
             <div class="field">
               <label for="bT">Top</label>
               <div class="numwrap" data-num="bT">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase top bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease top bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
-                <input type="text" id="bT" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase top bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease top bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bT" inputmode="decimal" value="3"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
             <div class="field">
               <label for="bB">Bottom</label>
               <div class="numwrap" data-num="bB">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase bottom bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease bottom bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
-                <input type="text" id="bB" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase bottom bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease bottom bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bB" inputmode="decimal" value="3"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
             <div class="field">
-              <label for="bI" data-mlabel="in">Inside</label>
+              <label for="bI" data-mlabel="in">Left</label>
               <div class="numwrap" data-num="bI">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase inside bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease inside bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
-                <input type="text" id="bI" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase inside bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease inside bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bI" inputmode="decimal" value="3"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
             <div class="field">
-              <label for="bO" data-mlabel="out">Outside</label>
+              <label for="bO" data-mlabel="out">Right</label>
               <div class="numwrap" data-num="bO">
-                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase outside bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease outside bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
-                <input type="text" id="bO" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+                <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase outside bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease outside bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bO" inputmode="decimal" value="3"><span class="unit" data-unitlabel>mm</span>
               </div>
             </div>
           </div>
@@ -226,6 +232,32 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.2M14 11a5 5 0 0 0-7.07 0L4.8 13.1a5 5 0 0 0 7.07 7.07L13.3 18.8"/></svg>
           </button>
         </div>
+      </div>
+    </section>
+
+    <section class="sect" id="sectBaseline">
+      <div class="sect-head" data-toggle>
+        <svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Baseline
+        <button type="button" class="sw" id="baselineOn" role="switch" aria-checked="false" aria-label="Enable baseline grid"><i></i></button>
+      </div>
+      <div class="sect-body">
+        <div class="grid2">
+          <div class="field">
+            <label for="baseline">Increment</label>
+            <div class="numwrap" data-num="baseline">
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase baseline"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease baseline"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="baseline" inputmode="decimal" value="4.233"><span class="unit" data-unitlabel>mm</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="baselineStart">Start Offset</label>
+            <div class="numwrap" data-num="baselineStart">
+              <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase baseline offset"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease baseline offset"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="baselineStart" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+            </div>
+          </div>
+        </div>
+        <p class="hint">Ruled from the top of the guide area, in the page's own units.</p>
       </div>
     </section>
 
@@ -277,10 +309,11 @@
           </div>
         </div>
 
-        <label class="check"><input type="checkbox" id="incBleed" checked><span class="box"></span>Extend canvas to bleed</label>
+        <label class="check" id="incBleedRow"><input type="checkbox" id="incBleed" checked><span class="box"></span>Extend canvas to bleed</label>
         <label class="check"><input type="checkbox" id="paper"><span class="box"></span>Include white paper</label>
         <label class="check"><input type="checkbox" id="fills" checked><span class="box"></span>Tint column &amp; row fields</label>
         <label class="check"><input type="checkbox" id="labels"><span class="box"></span>Number columns &amp; rows</label>
+        <label class="check"><input type="checkbox" id="dims"><span class="box"></span>Print measurements <em>(adds a margin around the page)</em></label>
 
         <button class="primary" id="btnDownload" type="button">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -291,7 +324,7 @@
     </section>
 
     <footer class="panel-foot">
-      Built for layout people. <a href="https://matteocurcio.com" rel="noopener">matteocurcio.com</a>
+      rev0.2 · Built for layout people. <a href="https://matteocurcio.com" rel="noopener">matteocurcio.com</a>
     </footer>
   </aside>
 
@@ -304,6 +337,7 @@
         <button type="button" class="chip on" data-layer="margins"><i style="--c:var(--g-margin)"></i>Margins</button>
         <button type="button" class="chip on" data-layer="cols"><i style="--c:var(--g-col)"></i>Columns</button>
         <button type="button" class="chip on" data-layer="rows"><i style="--c:var(--g-row)"></i>Rows</button>
+        <button type="button" class="chip on" data-layer="baseline"><i style="--c:var(--g-base)"></i>Baseline</button>
       </div>
       <div class="zoom">
         <button type="button" id="zOut" aria-label="Zoom out">−</button>

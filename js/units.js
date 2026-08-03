@@ -9,9 +9,12 @@ window.Units = (function () {
   function toMM(v, unit) { return v * TO_MM[unit]; }
   function fromMM(mm, unit) { return mm / TO_MM[unit]; }
 
+  /* Deliberately unrounded: pixels display to whole numbers, so rounding here
+     would degrade the document every time the unit changed (210 mm → 794 px →
+     210.08 mm). Callers round for display via format(), or explicitly. */
   function convert(v, from, to) {
     if (from === to) return v;
-    return round(fromMM(toMM(v, from), to), to);
+    return fromMM(toMM(v, from), to);
   }
 
   function round(v, unit) {

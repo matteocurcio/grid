@@ -1,10 +1,10 @@
 # Grid — layout system generator
 
 A browser tool that builds print and screen layout grids the way InDesign's *New Document*
-and *Create Guides* dialogs do — page size, margins, bleed, columns and rows — and exports
-them as SVG, transparent PNG or JPG.
+and *Create Guides* dialogs do — page size, margins, bleed, columns, rows and a baseline —
+and exports them as SVG, transparent PNG or JPG.
 
-Live at **grid.matteocurcio.com**.
+Live at **grid.matteocurcio.com**. Current revision **rev0.2**.
 
 ## What it does
 
@@ -16,8 +16,20 @@ Live at **grid.matteocurcio.com**.
   column, Swiss 4 × 8, Müller-Brockmann 6 × 6, magazine 6 × 9, newspaper 5), landscape
   print (slide 12 × 6, panorama 16 × 9, spread 8) and web (Bootstrap, Material, Tailwind,
   tablet 8, mobile 4, modular 12 × 8).
+- **Margins, bleed and baseline switch on and off** as whole features, from the switch in
+  each section header. Margins start on; bleed and baseline start off. A disabled section
+  keeps its values but contributes nothing to the geometry, so turning bleed off gives a
+  canvas at exactly trim size.
+- **Baseline grid** — an increment and a start offset, ruled from the top of the guide area
+  in the page's own units.
 - **Colour-coded preview** — bleed in red, margins in magenta, columns in violet, rows in
-  cyan, trim in grey. Each layer toggles from the legend above the preview.
+  cyan, baseline in amber, trim in grey. Each layer toggles from the legend above the
+  preview.
+- **Printed measurements** — an optional band outside the page annotating every dimension
+  along both axes (page, bleed, margins, content, column, gutter, row, baseline), each in
+  the page's unit and in pixels at the export resolution. The band sits entirely outside
+  the trim, and carries one measure per row, so labels can collide with neither the guides
+  nor each other.
 - **Export** — every selected format downloads at once. SVG carries real physical units
   (`width="216mm"`) and named layer groups that open cleanly in Illustrator or Affinity.
   PNG is transparent, JPG is flattened onto white.
