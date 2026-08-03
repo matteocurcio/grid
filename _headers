@@ -10,8 +10,13 @@
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
 
+# Assets revalidate on every request. Cloudflare's edge caches by path and
+# ignores the query string, so a ?v= bump does NOT reach the CDN — with a long
+# max-age here, a redeploy served new HTML against edge-cached old JS for up to
+# an hour. These files are ~15 KB and ETags make revalidation a 304, so the cost
+# is a round trip. Only content-hashed filenames would make long caching safe.
 /styles.css
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate
 
 /js/*
-  Cache-Control: public, max-age=3600, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate

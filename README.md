@@ -66,13 +66,24 @@ under the project's Settings → Builds & deployments.
 Run it from this directory, never from a parent — `.` is uploaded wholesale.
 
 `_headers` sets the security and cache headers, and only takes effect on Cloudflare, so
-it can't be tested locally. The HTML is served uncached; the CSS and JS are cached for an
-hour.
+it can't be tested locally. Everything now revalidates on each request.
 
-**Bump the `?v=` on the script and stylesheet tags in `index.html` with every release.**
-The filenames aren't content-hashed, so without a new query string a returning visitor
-loads the fresh HTML against hour-old cached CSS and JS — which renders as a half-updated
-page rather than an obvious failure.
+Assets used to carry `max-age=3600`, which broke two consecutive releases: the HTML is
+served uncached, so a redeploy shipped new markup against hour-old CSS and JS. It renders
+as a half-updated page rather than an obvious failure — switches drawn as bare dashes, new
+defaults silently ignored.
+
+The `?v=` query on the script and stylesheet tags only fixes the *browser* half of that.
+**Cloudflare's edge caches by path and ignores the query string**, so a `?v=` bump does not
+reach the CDN — verified by fetching a unique `?cb=` and still getting the old file. That
+is why the assets are now `max-age=0, must-revalidate`. Bumping `?v=` on release is still
+worth doing for browser caches, but it is not what makes a deploy safe.
+
+Long caching only becomes safe with content-hashed filenames, which needs a build step.
+
+After any deploy, verify against the deployment-specific URL wrangler prints
+(`https://<hash>.grid-96p.pages.dev`) rather than the alias — the alias can lag behind
+whatever the edge is still holding.
 
 The per-deployment preview URLs (`<hash>.grid-96p.pages.dev`) need a
 `*.grid-96p.pages.dev` certificate that takes a few minutes to issue after a new project
