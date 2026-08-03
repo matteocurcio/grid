@@ -18,7 +18,8 @@
       margins: { t: 12.7, b: 12.7, i: 12.7, o: 12.7 }, marginsLinked: true,
       bleedOn: false,
       bleed: { t: 3, b: 3, i: 3, o: 3 }, bleedLinked: true,
-      baselineOn: false, baseline: 4.233, baselineStart: 0,
+      /* matches the A4 preset exactly, so a fresh load names A4 rather than Custom */
+      baselineOn: false, baseline: 4.23, baselineStart: 0,
       baselinePerRow: false, baselineFromBottom: false,
       layers: { trim: true, bleed: true, margins: true, cols: true, rows: true, baseline: true },
       style: 'color',
@@ -68,9 +69,9 @@
                  get: function () { return S.colGutter; }, set: function (v) { S.colGutter = v; } },
     rowGutter: { kind: 'len', min: 0, marks: 'grid',
                  get: function () { return S.rowGutter; }, set: function (v) { S.rowGutter = v; } },
-    baseline: { kind: 'len', min: 0,
+    baseline: { kind: 'len', min: 0, marks: 'page',
                 get: function () { return S.baseline; }, set: function (v) { S.baseline = v; } },
-    baselineStart: { kind: 'len', min: 0,
+    baselineStart: { kind: 'len', min: 0, marks: 'page',
                      get: function () { return S.baselineStart; }, set: function (v) { S.baselineStart = v; } },
     mT: margin('t'), mB: margin('b'), mI: margin('i'), mO: margin('o'),
     bT: bleed('t'), bB: bleed('b'), bI: bleed('i'), bO: bleed('o')
@@ -133,13 +134,22 @@
     markCustom('grid');
   }
 
+  /* A preset matches only while every value it sets is still its own — size,
+     margins, bleed and baseline. Edit any of them and the selector falls back
+     to Custom, rather than naming a preset the document no longer matches. */
   function matchPage() {
     var hit = null;
+    var eq = function (a, b) { return Math.abs(a - b) < 1e-6; };
+    var all = function (o, v) { return eq(o.t, v) && eq(o.b, v) && eq(o.i, v) && eq(o.o, v); };
+
     Presets.PAGES.forEach(function (p) {
       if (hit || p.unit !== S.unit) return;
       var a = Math.min(p.w, p.h), b = Math.max(p.w, p.h);
       var x = Math.min(S.w, S.h), y = Math.max(S.w, S.h);
-      if (Math.abs(a - x) < 0.01 && Math.abs(b - y) < 0.01) hit = p.id;
+      if (Math.abs(a - x) > 0.01 || Math.abs(b - y) > 0.01) return;
+      if (!all(S.margins, p.margin) || !all(S.bleed, p.bleed)) return;
+      if (p.base !== undefined && !(eq(S.baseline, p.base) && eq(S.baselineStart, 0))) return;
+      hit = p.id;
     });
     return hit;
   }
@@ -282,11 +292,11 @@
       });
     $('incBleedRow').classList.toggle('muted', !S.bleedOn);
 
-    /* Both row-dependent options are hidden rather than dimmed when there are
-       no rows — there is nothing to restart against. */
+    /* "Restart on every row" always shows — hiding it on a column-only grid
+       made it look like the option had disappeared. Ruling upward only appears
+       once there are rows to restart against. */
     var perRow = S.baselinePerRow && S.rows > 0;
     $('baselinePerRow').checked = S.baselinePerRow;
-    $('perRowRow').classList.toggle('hide', S.rows < 1);
     $('baselineFromBottom').checked = S.baselineFromBottom;
     $('fromBottomRow').classList.toggle('hide', !perRow);
 

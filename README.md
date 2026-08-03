@@ -4,7 +4,11 @@ A browser tool that builds print and screen layout grids the way InDesign's *New
 and *Create Guides* dialogs do — page size, margins, bleed, columns, rows and a baseline —
 and exports them as SVG, transparent PNG or JPG.
 
-Live at **grid.matteocurcio.com**. Current revision **rev0.2**.
+Live at **grid.matteocurcio.com**. Current revision **rev0.3**.
+
+Every change bumps the rev badge by one decimal point — it appears in the `<h1>` and the
+panel footer — and the `?v=` on the asset URLs moves with it. The badge is how you tell a
+deployed build apart on refresh; the `?v=` is what makes that reliable.
 
 ## What it does
 

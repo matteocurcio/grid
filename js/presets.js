@@ -15,20 +15,20 @@ window.Presets = (function () {
   var PAGES = [
     /* ISO A — the metric standard, √2 ratio. Leading runs 8 pt on a card up to
        30 pt on an A0 poster; the mm figures are those points converted. */
-    p('a0', 'A0 — 841 × 1189 mm', 'ISO A series', 841, 1189, 'mm', 30, 5, 10.5833),
-    p('a1', 'A1 — 594 × 841 mm', 'ISO A series', 594, 841, 'mm', 25, 5, 8.4667),
+    p('a0', 'A0 — 841 × 1189 mm', 'ISO A series', 841, 1189, 'mm', 30, 5, 10.58),
+    p('a1', 'A1 — 594 × 841 mm', 'ISO A series', 594, 841, 'mm', 25, 5, 8.47),
     p('a2', 'A2 — 420 × 594 mm', 'ISO A series', 420, 594, 'mm', 20, 5, 6.35),
-    p('a3', 'A3 — 297 × 420 mm', 'ISO A series', 297, 420, 'mm', 15, 3, 4.9389),
-    p('a4', 'A4 — 210 × 297 mm', 'ISO A series', 210, 297, 'mm', 12.7, 3, 4.2333),
-    p('a5', 'A5 — 148 × 210 mm', 'ISO A series', 148, 210, 'mm', 12, 3, 3.8806),
-    p('a6', 'A6 — 105 × 148 mm', 'ISO A series', 105, 148, 'mm', 10, 3, 3.175),
-    p('a7', 'A7 — 74 × 105 mm', 'ISO A series', 74, 105, 'mm', 7, 3, 2.8222),
+    p('a3', 'A3 — 297 × 420 mm', 'ISO A series', 297, 420, 'mm', 15, 3, 4.94),
+    p('a4', 'A4 — 210 × 297 mm', 'ISO A series', 210, 297, 'mm', 12.7, 3, 4.23),
+    p('a5', 'A5 — 148 × 210 mm', 'ISO A series', 148, 210, 'mm', 12, 3, 3.88),
+    p('a6', 'A6 — 105 × 148 mm', 'ISO A series', 105, 148, 'mm', 10, 3, 3.18),
+    p('a7', 'A7 — 74 × 105 mm', 'ISO A series', 74, 105, 'mm', 7, 3, 2.82),
 
     /* ISO B — posters and books */
     p('b2', 'B2 — 500 × 707 mm', 'ISO B series', 500, 707, 'mm', 22, 5, 6.35),
-    p('b3', 'B3 — 353 × 500 mm', 'ISO B series', 353, 500, 'mm', 18, 3, 4.9389),
-    p('b4', 'B4 — 250 × 353 mm', 'ISO B series', 250, 353, 'mm', 15, 3, 4.5861),
-    p('b5', 'B5 — 176 × 250 mm', 'ISO B series', 176, 250, 'mm', 14, 3, 3.8806),
+    p('b3', 'B3 — 353 × 500 mm', 'ISO B series', 353, 500, 'mm', 18, 3, 4.94),
+    p('b4', 'B4 — 250 × 353 mm', 'ISO B series', 250, 353, 'mm', 15, 3, 4.59),
+    p('b5', 'B5 — 176 × 250 mm', 'ISO B series', 176, 250, 'mm', 14, 3, 3.88),
 
     /* US */
     p('letter', 'Letter — 8.5 × 11 in', 'US sizes', 8.5, 11, 'in', 0.5, 0.125, 0.1667),
@@ -40,9 +40,9 @@ window.Presets = (function () {
     p('digest', 'Digest — 5.5 × 8.5 in', 'US sizes', 5.5, 8.5, 'in', 0.5, 0.125, 0.1528),
 
     /* other print */
-    p('sq210', 'Square — 210 × 210 mm', 'Other print', 210, 210, 'mm', 14, 3, 4.2333),
-    p('dl', 'DL — 99 × 210 mm', 'Other print', 99, 210, 'mm', 8, 3, 3.8806),
-    p('card-eu', 'Business card EU — 85 × 55 mm', 'Other print', 85, 55, 'mm', 5, 3, 2.8222),
+    p('sq210', 'Square — 210 × 210 mm', 'Other print', 210, 210, 'mm', 14, 3, 4.23),
+    p('dl', 'DL — 99 × 210 mm', 'Other print', 99, 210, 'mm', 8, 3, 3.88),
+    p('card-eu', 'Business card EU — 85 × 55 mm', 'Other print', 85, 55, 'mm', 5, 3, 2.82),
     p('card-us', 'Business card US — 3.5 × 2 in', 'Other print', 3.5, 2, 'in', 0.2, 0.125, 0.1111),
     p('vinyl', 'Record sleeve — 12 × 12 in', 'Other print', 12, 12, 'in', 0.75, 0.125, 0.1944),
 
