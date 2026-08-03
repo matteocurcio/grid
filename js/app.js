@@ -110,9 +110,27 @@
     return true;
   }
 
+  /* Selecting an id the list no longer offers would silently land on the first
+     option, so fall back to Custom when it isn't there. */
+  function setSelect(sel, id) {
+    var has = false;
+    for (var i = 0; i < sel.options.length; i++) if (sel.options[i].value === id) has = true;
+    sel.value = has ? id : 'custom';
+  }
+
   function markCustom(which) {
-    if (which === 'page') $('pagePreset').value = matchPage() || 'custom';
-    if (which === 'grid') $('gridPreset').value = matchGrid() || 'custom';
+    if (which === 'page') setSelect($('pagePreset'), matchPage() || 'custom');
+    if (which === 'grid') setSelect($('gridPreset'), matchGrid() || 'custom');
+  }
+
+  /* The grid list follows the page orientation, so it is rebuilt when that
+     flips rather than filled once at boot. */
+  var gridListFor = null;
+  function syncGridList() {
+    if (gridListFor === S.orientation) return;
+    gridListFor = S.orientation;
+    Presets.fill($('gridPreset'), Presets.gridsFor(S.orientation), 'Custom');
+    markCustom('grid');
   }
 
   function matchPage() {
@@ -155,6 +173,7 @@
     S.orientation = S.w > S.h ? 'landscape' : 'portrait';
     S.margins = { t: p.margin, b: p.margin, i: p.margin, o: p.margin };
     S.bleed = { t: p.bleed, b: p.bleed, i: p.bleed, o: p.bleed };
+    if (p.base) { S.baseline = p.base; S.baselineStart = 0; }
     zoom.mode = 'fit';
     markCustom('grid');
   }
@@ -234,6 +253,7 @@
 
   /* --------------------------------------------------------- sync to UI */
   function syncInputs() {
+    syncGridList();
     Object.keys(F).forEach(function (id) {
       var el = $(id);
       if (el && document.activeElement !== el) el.value = fieldText(id);
@@ -262,16 +282,13 @@
       });
     $('incBleedRow').classList.toggle('muted', !S.bleedOn);
 
+    /* Both row-dependent options are hidden rather than dimmed when there are
+       no rows — there is nothing to restart against. */
     var perRow = S.baselinePerRow && S.rows > 0;
     $('baselinePerRow').checked = S.baselinePerRow;
-    $('baselinePerRow').closest('.check').classList.toggle('muted', S.rows < 1);
+    $('perRowRow').classList.toggle('hide', S.rows < 1);
     $('baselineFromBottom').checked = S.baselineFromBottom;
     $('fromBottomRow').classList.toggle('hide', !perRow);
-    $('baselineHint').textContent = !perRow
-      ? 'Ruled from the top of the guide area, in the page\'s own units.'
-      : S.baselineFromBottom
-        ? 'Restarts in each row band, ruled upward from the row\'s bottom edge.'
-        : 'Restarts at the top of each row band, in the page\'s own units.';
 
     document.querySelectorAll('#fitTo button').forEach(function (b) {
       b.classList.toggle('on', b.dataset.v === S.fitTo);

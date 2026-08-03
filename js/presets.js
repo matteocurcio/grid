@@ -3,57 +3,62 @@
    Grid gutters carry their own unit and are converted on apply. */
 window.Presets = (function () {
 
-  /* ---------- page sizes ---------- */
-  function p(id, label, group, w, h, unit, margin, bleed) {
-    return { id: id, label: label, group: group, w: w, h: h, unit: unit, margin: margin, bleed: bleed || 0 };
+  /* ---------- page sizes ----------
+     `base` is the format's customary leading, in the preset's own unit: the
+     classic 12 pt for A4 and Letter, scaled up for posters and down for cards,
+     and an 8 px rhythm for screens. */
+  function p(id, label, group, w, h, unit, margin, bleed, base) {
+    return { id: id, label: label, group: group, w: w, h: h, unit: unit,
+             margin: margin, bleed: bleed || 0, base: base };
   }
 
   var PAGES = [
-    /* ISO A — the metric standard, √2 ratio */
-    p('a0', 'A0 — 841 × 1189 mm', 'ISO A series', 841, 1189, 'mm', 30, 5),
-    p('a1', 'A1 — 594 × 841 mm', 'ISO A series', 594, 841, 'mm', 25, 5),
-    p('a2', 'A2 — 420 × 594 mm', 'ISO A series', 420, 594, 'mm', 20, 5),
-    p('a3', 'A3 — 297 × 420 mm', 'ISO A series', 297, 420, 'mm', 15, 3),
-    p('a4', 'A4 — 210 × 297 mm', 'ISO A series', 210, 297, 'mm', 12.7, 3),
-    p('a5', 'A5 — 148 × 210 mm', 'ISO A series', 148, 210, 'mm', 12, 3),
-    p('a6', 'A6 — 105 × 148 mm', 'ISO A series', 105, 148, 'mm', 10, 3),
-    p('a7', 'A7 — 74 × 105 mm', 'ISO A series', 74, 105, 'mm', 7, 3),
+    /* ISO A — the metric standard, √2 ratio. Leading runs 8 pt on a card up to
+       30 pt on an A0 poster; the mm figures are those points converted. */
+    p('a0', 'A0 — 841 × 1189 mm', 'ISO A series', 841, 1189, 'mm', 30, 5, 10.5833),
+    p('a1', 'A1 — 594 × 841 mm', 'ISO A series', 594, 841, 'mm', 25, 5, 8.4667),
+    p('a2', 'A2 — 420 × 594 mm', 'ISO A series', 420, 594, 'mm', 20, 5, 6.35),
+    p('a3', 'A3 — 297 × 420 mm', 'ISO A series', 297, 420, 'mm', 15, 3, 4.9389),
+    p('a4', 'A4 — 210 × 297 mm', 'ISO A series', 210, 297, 'mm', 12.7, 3, 4.2333),
+    p('a5', 'A5 — 148 × 210 mm', 'ISO A series', 148, 210, 'mm', 12, 3, 3.8806),
+    p('a6', 'A6 — 105 × 148 mm', 'ISO A series', 105, 148, 'mm', 10, 3, 3.175),
+    p('a7', 'A7 — 74 × 105 mm', 'ISO A series', 74, 105, 'mm', 7, 3, 2.8222),
 
     /* ISO B — posters and books */
-    p('b2', 'B2 — 500 × 707 mm', 'ISO B series', 500, 707, 'mm', 22, 5),
-    p('b3', 'B3 — 353 × 500 mm', 'ISO B series', 353, 500, 'mm', 18, 3),
-    p('b4', 'B4 — 250 × 353 mm', 'ISO B series', 250, 353, 'mm', 15, 3),
-    p('b5', 'B5 — 176 × 250 mm', 'ISO B series', 176, 250, 'mm', 14, 3),
+    p('b2', 'B2 — 500 × 707 mm', 'ISO B series', 500, 707, 'mm', 22, 5, 6.35),
+    p('b3', 'B3 — 353 × 500 mm', 'ISO B series', 353, 500, 'mm', 18, 3, 4.9389),
+    p('b4', 'B4 — 250 × 353 mm', 'ISO B series', 250, 353, 'mm', 15, 3, 4.5861),
+    p('b5', 'B5 — 176 × 250 mm', 'ISO B series', 176, 250, 'mm', 14, 3, 3.8806),
 
     /* US */
-    p('letter', 'Letter — 8.5 × 11 in', 'US sizes', 8.5, 11, 'in', 0.5, 0.125),
-    p('legal', 'Legal — 8.5 × 14 in', 'US sizes', 8.5, 14, 'in', 0.5, 0.125),
-    p('tabloid', 'Tabloid — 11 × 17 in', 'US sizes', 11, 17, 'in', 0.5, 0.125),
-    p('halfletter', 'Half Letter — 5.5 × 8.5 in', 'US sizes', 5.5, 8.5, 'in', 0.5, 0.125),
-    p('executive', 'Executive — 7.25 × 10.5 in', 'US sizes', 7.25, 10.5, 'in', 0.5, 0.125),
-    p('ustrade', 'US Trade book — 6 × 9 in', 'US sizes', 6, 9, 'in', 0.625, 0.125),
-    p('digest', 'Digest — 5.5 × 8.5 in', 'US sizes', 5.5, 8.5, 'in', 0.5, 0.125),
+    p('letter', 'Letter — 8.5 × 11 in', 'US sizes', 8.5, 11, 'in', 0.5, 0.125, 0.1667),
+    p('legal', 'Legal — 8.5 × 14 in', 'US sizes', 8.5, 14, 'in', 0.5, 0.125, 0.1667),
+    p('tabloid', 'Tabloid — 11 × 17 in', 'US sizes', 11, 17, 'in', 0.5, 0.125, 0.1944),
+    p('halfletter', 'Half Letter — 5.5 × 8.5 in', 'US sizes', 5.5, 8.5, 'in', 0.5, 0.125, 0.1528),
+    p('executive', 'Executive — 7.25 × 10.5 in', 'US sizes', 7.25, 10.5, 'in', 0.5, 0.125, 0.1528),
+    p('ustrade', 'US Trade book — 6 × 9 in', 'US sizes', 6, 9, 'in', 0.625, 0.125, 0.1806),
+    p('digest', 'Digest — 5.5 × 8.5 in', 'US sizes', 5.5, 8.5, 'in', 0.5, 0.125, 0.1528),
 
     /* other print */
-    p('sq210', 'Square — 210 × 210 mm', 'Other print', 210, 210, 'mm', 14, 3),
-    p('dl', 'DL — 99 × 210 mm', 'Other print', 99, 210, 'mm', 8, 3),
-    p('card-eu', 'Business card EU — 85 × 55 mm', 'Other print', 85, 55, 'mm', 5, 3),
-    p('card-us', 'Business card US — 3.5 × 2 in', 'Other print', 3.5, 2, 'in', 0.2, 0.125),
-    p('vinyl', 'Record sleeve — 12 × 12 in', 'Other print', 12, 12, 'in', 0.75, 0.125),
+    p('sq210', 'Square — 210 × 210 mm', 'Other print', 210, 210, 'mm', 14, 3, 4.2333),
+    p('dl', 'DL — 99 × 210 mm', 'Other print', 99, 210, 'mm', 8, 3, 3.8806),
+    p('card-eu', 'Business card EU — 85 × 55 mm', 'Other print', 85, 55, 'mm', 5, 3, 2.8222),
+    p('card-us', 'Business card US — 3.5 × 2 in', 'Other print', 3.5, 2, 'in', 0.2, 0.125, 0.1111),
+    p('vinyl', 'Record sleeve — 12 × 12 in', 'Other print', 12, 12, 'in', 0.75, 0.125, 0.1944),
 
-    /* screen */
-    p('desktop-hd', 'Desktop HD — 1920 × 1080', 'Screen', 1920, 1080, 'px', 80, 0),
-    p('desktop', 'Desktop — 1440 × 1024', 'Screen', 1440, 1024, 'px', 64, 0),
-    p('mbp14', 'MacBook Pro 14" — 1512 × 982', 'Screen', 1512, 982, 'px', 64, 0),
-    p('laptop', 'Laptop — 1280 × 800', 'Screen', 1280, 800, 'px', 48, 0),
-    p('tablet', 'iPad — 768 × 1024', 'Screen', 768, 1024, 'px', 32, 0),
-    p('ipadpro', 'iPad Pro 11" — 834 × 1194', 'Screen', 834, 1194, 'px', 32, 0),
-    p('mobile', 'iPhone — 390 × 844', 'Screen', 390, 844, 'px', 16, 0),
-    p('mobile-max', 'iPhone Pro Max — 430 × 932', 'Screen', 430, 932, 'px', 20, 0),
-    p('android', 'Android — 360 × 800', 'Screen', 360, 800, 'px', 16, 0),
-    p('social-sq', 'Social square — 1080 × 1080', 'Screen', 1080, 1080, 'px', 60, 0),
-    p('social-story', 'Social story — 1080 × 1920', 'Screen', 1080, 1920, 'px', 60, 0),
-    p('slide-169', 'Slide 16:9 — 1920 × 1080', 'Screen', 1920, 1080, 'px', 72, 0)
+    /* screen — the 8 px rhythm, halved on phones */
+    p('desktop-hd', 'Desktop HD — 1920 × 1080', 'Screen', 1920, 1080, 'px', 80, 0, 8),
+    p('desktop', 'Desktop — 1440 × 1024', 'Screen', 1440, 1024, 'px', 64, 0, 8),
+    p('mbp14', 'MacBook Pro 14" — 1512 × 982', 'Screen', 1512, 982, 'px', 64, 0, 8),
+    p('laptop', 'Laptop — 1280 × 800', 'Screen', 1280, 800, 'px', 48, 0, 8),
+    p('tablet', 'iPad — 768 × 1024', 'Screen', 768, 1024, 'px', 32, 0, 8),
+    p('ipadpro', 'iPad Pro 11" — 834 × 1194', 'Screen', 834, 1194, 'px', 32, 0, 8),
+    p('mobile', 'iPhone — 390 × 844', 'Screen', 390, 844, 'px', 16, 0, 4),
+    p('mobile-max', 'iPhone Pro Max — 430 × 932', 'Screen', 430, 932, 'px', 20, 0, 4),
+    p('android', 'Android — 360 × 800', 'Screen', 360, 800, 'px', 16, 0, 4),
+    p('social-sq', 'Social square — 1080 × 1080', 'Screen', 1080, 1080, 'px', 60, 0, 8),
+    p('social-story', 'Social story — 1080 × 1920', 'Screen', 1080, 1920, 'px', 60, 0, 8),
+    p('slide-169', 'Slide 16:9 — 1920 × 1080', 'Screen', 1920, 1080, 'px', 72, 0, 8)
   ];
 
   /* ---------- grids ---------- */
@@ -120,6 +125,15 @@ window.Presets = (function () {
     });
   }
 
+  /* Print grids are drawn for one orientation, so only the matching set is
+     offered; web grids suit either. */
+  function gridsFor(orientation) {
+    var wanted = orientation === 'landscape' ? 'Print · landscape' : 'Print · portrait';
+    return GRIDS.filter(function (g) {
+      return g.group === wanted || g.group === 'Web & UI';
+    });
+  }
+
   return { PAGES: PAGES, GRIDS: GRIDS, page: function (id) { return byId(PAGES, id); },
-           grid: function (id) { return byId(GRIDS, id); }, fill: fill };
+           grid: function (id) { return byId(GRIDS, id); }, fill: fill, gridsFor: gridsFor };
 })();
