@@ -66,8 +66,13 @@ under the project's Settings → Builds & deployments.
 Run it from this directory, never from a parent — `.` is uploaded wholesale.
 
 `_headers` sets the security and cache headers, and only takes effect on Cloudflare, so
-it can't be tested locally. Because the CSS and JS filenames aren't content-hashed they're
-cached for an hour rather than immutably, so a redeploy propagates within the hour.
+it can't be tested locally. The HTML is served uncached; the CSS and JS are cached for an
+hour.
+
+**Bump the `?v=` on the script and stylesheet tags in `index.html` with every release.**
+The filenames aren't content-hashed, so without a new query string a returning visitor
+loads the fresh HTML against hour-old cached CSS and JS — which renders as a half-updated
+page rather than an obvious failure.
 
 The per-deployment preview URLs (`<hash>.grid-96p.pages.dev`) need a
 `*.grid-96p.pages.dev` certificate that takes a few minutes to issue after a new project
