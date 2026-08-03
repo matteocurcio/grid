@@ -37,14 +37,30 @@ Then open http://localhost:4321.
 
 ## Deploying to Cloudflare
 
+Deployed as the Cloudflare Pages project `grid`, served at https://grid-96p.pages.dev
+(the `-96p` suffix is Cloudflare's — `grid.pages.dev` was already taken by another
+account) and fronted by `grid.matteocurcio.com`.
+
 ```bash
-npx wrangler pages deploy . --project-name=grid
+wrangler pages deploy . --project-name=grid --branch production
 ```
 
-Then in the Cloudflare dashboard, add `grid.matteocurcio.com` as a custom domain on the
-`grid` Pages project. `_headers` sets the security and cache headers; because the CSS and
-JS filenames aren't content-hashed they're cached for an hour rather than immutably, so a
-redeploy propagates within the hour.
+**Keep `--branch production` on every deploy.** The project's production branch is
+`production` but this repo's branch is `main`, and wrangler infers the branch from git.
+Without the flag a deploy is filed as a *preview* — it succeeds, prints a URL, and never
+reaches the live site. To drop the flag instead, change the production branch to `main`
+under the project's Settings → Builds & deployments.
+
+Run it from this directory, never from a parent — `.` is uploaded wholesale.
+
+`_headers` sets the security and cache headers, and only takes effect on Cloudflare, so
+it can't be tested locally. Because the CSS and JS filenames aren't content-hashed they're
+cached for an hour rather than immutably, so a redeploy propagates within the hour.
+
+The per-deployment preview URLs (`<hash>.grid-96p.pages.dev`) need a
+`*.grid-96p.pages.dev` certificate that takes a few minutes to issue after a new project
+is created. Before it lands, those URLs fail the TLS handshake — Firefox reports it as
+`SSL_ERROR_NO_CYPHER_OVERLAP`. The bare `grid-96p.pages.dev` address works throughout.
 
 ## How it's put together
 
