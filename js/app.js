@@ -18,7 +18,7 @@
       margins: { t: 12.7, b: 12.7, i: 12.7, o: 12.7 }, marginsLinked: true,
       bleedOn: false,
       bleed: { t: 3, b: 3, i: 3, o: 3 }, bleedLinked: true,
-      baselineOn: false, baseline: 4.233, baselineStart: 0,
+      baselineOn: false, baseline: 4.233, baselineStart: 0, baselinePerRow: false,
       layers: { trim: true, bleed: true, margins: true, cols: true, rows: true, baseline: true },
       style: 'color',
       exp: { svg: true, png: true, jpg: false, dpi: 300, scale: 2,
@@ -261,6 +261,12 @@
       });
     $('incBleedRow').classList.toggle('muted', !S.bleedOn);
 
+    $('baselinePerRow').checked = S.baselinePerRow;
+    $('baselinePerRow').closest('.check').classList.toggle('muted', S.rows < 1);
+    $('baselineHint').textContent = S.baselinePerRow && S.rows > 0
+      ? 'Restarts at the top of each row band, in the page\'s own units.'
+      : 'Ruled from the top of the guide area, in the page\'s own units.';
+
     document.querySelectorAll('#fitTo button').forEach(function (b) {
       b.classList.toggle('on', b.dataset.v === S.fitTo);
     });
@@ -361,6 +367,7 @@
     $('oLandscape').addEventListener('click', function () { setOrientation('landscape'); });
 
     $('facing').addEventListener('change', function () { S.facing = this.checked; refresh(); });
+    $('baselinePerRow').addEventListener('change', function () { S.baselinePerRow = this.checked; refresh(); });
 
     $('mLink').addEventListener('click', function () {
       S.marginsLinked = !S.marginsLinked;

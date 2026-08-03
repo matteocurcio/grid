@@ -21,7 +21,7 @@ Live at **grid.matteocurcio.com**. Current revision **rev0.2**.
   keeps its values but contributes nothing to the geometry, so turning bleed off gives a
   canvas at exactly trim size.
 - **Baseline grid** — an increment and a start offset, ruled from the top of the guide area
-  in the page's own units.
+  in the page's own units, optionally restarting at the top of every row band.
 - **Colour-coded preview** — bleed in red, margins in magenta, columns in violet, rows in
   cyan, baseline in amber, trim in grey. Each layer toggles from the legend above the
   preview.

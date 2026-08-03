@@ -5,13 +5,13 @@ window.Render = (function () {
   var COLOR = {
     trim: '#9a9a97', bleed: '#ff5b5b', margin: '#ff3ea5',
     col: '#7c6cf6', row: '#22c7d6', base: '#e8a33d',
-    label: '#8f8f8c', dim: '#6b6b68',
+    label: '#8f8f8c', dim: '#8a8a87', dimLabel: '#4a4a47',
     colFill: 'rgba(124,108,246,0.10)', rowFill: 'rgba(34,199,214,0.10)'
   };
   var MONO = {
     trim: '#9a9a97', bleed: '#9a9a97', margin: '#9a9a97',
     col: '#9a9a97', row: '#9a9a97', base: '#9a9a97',
-    label: '#8f8f8c', dim: '#6b6b68',
+    label: '#8f8f8c', dim: '#8a8a87', dimLabel: '#4a4a47',
     colFill: 'rgba(154,154,151,0.10)', rowFill: 'rgba(154,154,151,0.10)'
   };
 
@@ -28,9 +28,11 @@ window.Render = (function () {
      measuring it for real — which the renderer has no way to do anyway. */
   function textWidth(text, fs) { return text.length * fs * 0.6; }
 
-  /* Captions read like the readout under the preview: "Column 27.43 mm",
-     with the pixel equivalent at the export resolution appended. */
-  var GAP = '   ';
+  /* Captions read like the readout under the preview: a stronger label, a
+     lighter value, and a generous gap between parameters. SVG collapses runs
+     of whitespace unless xml:space="preserve" is set, so the gap only survives
+     because the text elements carry it. */
+  var GAP = '    ';
 
   function val(v, s) { return Units.format(v, s.unit) + ' ' + s.unit; }
 
@@ -41,16 +43,16 @@ window.Render = (function () {
   }
 
   function read(name, v, s, withAlt) {
-    return name + ' ' + val(v, s) + (withAlt ? ' · ' + alt(v, s) : '');
+    return { l: name, v: val(v, s) + (withAlt ? ' · ' + alt(v, s) : '') };
   }
 
-  /* Asymmetric pairs drop the pixel reading rather than double its length. */
+  /* Asymmetric pairs drop the pixel reading rather than double their length. */
   function readPair(name, a, b, s, withAlt) {
     if (a === b) return read(name, a, s, withAlt);
-    return name + ' ' + Units.format(a, s.unit) + ' / ' + Units.format(b, s.unit) + ' ' + s.unit;
+    return { l: name, v: Units.format(a, s.unit) + ' / ' + Units.format(b, s.unit) + ' ' + s.unit };
   }
 
-  function caption(s, g, axis, withAlt) {
+  function captionItems(s, g, axis, withAlt) {
     var p = [];
     if (axis === 'h') {
       p.push(read('Width', s.w, s, withAlt));
@@ -60,9 +62,13 @@ window.Render = (function () {
         p.push(readPair('Margin', s.margins.i, s.margins.o, s, withAlt));
         p.push(read('Content', g.marginBox.w, s, withAlt));
       }
-      if (s.cols > 0 && g.colsFit) p.push(read('Column', g.colW, s, withAlt) + ' × ' + s.cols);
+      if (s.cols > 0 && g.colsFit) {
+        var c = read('Column', g.colW, s, withAlt);
+        c.v += ' × ' + s.cols;
+        p.push(c);
+      }
       if (s.cols > 1 && g.colsFit) p.push(read('Gutter', s.colGutter, s, withAlt));
-      if (s.unit !== 'px' && withAlt) p.push(s.exp.dpi + ' dpi');
+      if (s.unit !== 'px' && withAlt) p.push({ l: 'Res', v: s.exp.dpi + ' dpi' });
     } else {
       p.push(read('Height', s.h, s, withAlt));
       if (s.bleedOn && (s.bleed.t || s.bleed.b))
@@ -71,12 +77,31 @@ window.Render = (function () {
         p.push(readPair('Margin', s.margins.t, s.margins.b, s, withAlt));
         p.push(read('Content', g.marginBox.h, s, withAlt));
       }
-      if (s.rows > 0 && g.rowsFit) p.push(read('Row', g.rowH, s, withAlt) + ' × ' + s.rows);
+      if (s.rows > 0 && g.rowsFit) {
+        var r = read('Row', g.rowH, s, withAlt);
+        r.v += ' × ' + s.rows;
+        p.push(r);
+      }
       if (s.rows > 1 && g.rowsFit) p.push(read('Gutter', s.rowGutter, s, withAlt));
-      if (s.baselineOn && g.baselines > 0)
-        p.push(read('Baseline', s.baseline, s, withAlt) + ' × ' + g.baselines);
+      if (s.baselineOn && g.baselines > 0) {
+        var b = read('Baseline', s.baseline, s, withAlt);
+        b.v += ' × ' + g.baselines;
+        p.push(b);
+      }
     }
-    return p.join(GAP);
+    return p;
+  }
+
+  function itemsText(items) {
+    return items.map(function (i) { return i.l + ' ' + i.v; }).join(GAP);
+  }
+
+  function itemsSpans(items, C) {
+    return items.map(function (i, idx) {
+      return '<tspan fill="' + C.dimLabel + '" font-weight="600">' +
+        (idx ? GAP : '') + esc(i.l) + '</tspan>' +
+        '<tspan fill="' + C.dim + '"> ' + esc(i.v) + '</tspan>';
+    }).join('');
   }
 
   /* All boxes in document units. Origin is the top-left of the exported canvas. */
@@ -100,17 +125,23 @@ window.Render = (function () {
     var colsFit = !(s.cols > 0 && colW <= 0);
     var rowsFit = !(s.rows > 0 && rowH <= 0);
 
-    var baselines = 0;
+    /* Per row, the ruling restarts at the top of every row band; otherwise it
+       runs once from the top of the guide area straight through. */
+    var perRow = s.baselinePerRow && s.rows > 0 && rowsFit;
+    var baselines = 0, perBand = 0;
     if (s.baselineOn && s.baseline > 0) {
-      baselines = Math.min(MAX_BASELINES,
-        Math.floor((guide.h - s.baselineStart) / s.baseline) + 1);
-      if (baselines < 0) baselines = 0;
+      var band = perRow ? rowH : guide.h;
+      perBand = Math.floor((band - s.baselineStart) / s.baseline) + 1;
+      if (perBand < 0) perBand = 0;
+      baselines = Math.min(MAX_BASELINES, perRow ? perBand * s.rows : perBand);
+      perBand = Math.min(perBand, MAX_BASELINES);
     }
 
     var g = {
       page: page, bleedBox: bleedBox, marginBox: marginBox, guide: guide,
       colW: colW, rowH: rowH, colsFit: colsFit, rowsFit: rowsFit,
-      baselines: baselines, marginsFit: marginBox.w > 0 && marginBox.h > 0,
+      baselines: baselines, perBand: perBand, perRow: perRow,
+      marginsFit: marginBox.w > 0 && marginBox.h > 0,
       fs: Math.max(s.w, s.h) / 70,
       hair: Math.max(s.w, s.h) / 800
     };
@@ -158,10 +189,11 @@ window.Render = (function () {
     var inStrip = align && Math.min(hStrip, vStrip) * 0.34 >= minFs;
 
     function fit(withAlt) {
-      var h = caption(s, g, 'h', withAlt), v = caption(s, g, 'v', withAlt);
-      var fs = Math.min(maxFs, hAlong / (h.length * 0.6), vAlong / (v.length * 0.6));
+      var h = captionItems(s, g, 'h', withAlt), v = captionItems(s, g, 'v', withAlt);
+      var hLen = itemsText(h).length, vLen = itemsText(v).length;
+      var fs = Math.min(maxFs, hAlong / (hLen * 0.6), vAlong / (vLen * 0.6));
       if (inStrip) fs = Math.min(fs, hStrip * 0.34, vStrip * 0.34);
-      return { fs: fs, h: h, v: v };
+      return { fs: fs, h: h, v: v, hLen: hLen, vLen: vLen };
     }
 
     var r = fit(true);
@@ -170,12 +202,14 @@ window.Render = (function () {
       if (compact.fs > r.fs) r = compact;
     }
 
-    return { fs: r.fs, h: r.h, v: r.v, inStrip: inStrip, align: align,
+    return { fs: r.fs, h: r.h, v: r.v, hLen: r.hLen, vLen: r.vLen,
+             inStrip: inStrip, align: align,
              hStart: hStart, vStart: vStart, hStrip: hStrip, vStrip: vStrip };
   }
 
   function captionSVG(s, g, C) {
     var c = captions(s, g), fs = c.fs, out = '';
+    var hw = c.hLen * fs * 0.6, vw = c.vLen * fs * 0.6;
 
     var hy;
     if (c.inStrip) {
@@ -183,20 +217,22 @@ window.Render = (function () {
     } else {
       hy = g.page.y + g.page.h - (c.align ? s.margins.b : 0) - fs * 0.7;
       out += rect({ x: c.hStart - fs * 0.35, y: hy - fs * 0.95,
-                    w: textWidth(c.h, fs) + fs * 0.7, h: fs * 1.35 }, PLATE);
+                    w: hw + fs * 0.7, h: fs * 1.35 }, PLATE);
     }
-    out += '<text x="' + n(c.hStart) + '" y="' + n(hy) + '">' + esc(c.h) + '</text>';
+    out += '<text xml:space="preserve" x="' + n(c.hStart) + '" y="' + n(hy) + '">' +
+      itemsSpans(c.h, C) + '</text>';
 
     var vx;
     if (c.inStrip) {
       vx = g.page.x + g.page.w - c.vStrip / 2 + fs * 0.35;
     } else {
       vx = g.page.x + g.page.w - (c.align ? s.margins.o : 0) - fs * 0.7;
-      out += rect({ x: vx - fs * 0.95, y: c.vStart - textWidth(c.v, fs) - fs * 0.35,
-                    w: fs * 1.35, h: textWidth(c.v, fs) + fs * 0.7 }, PLATE);
+      out += rect({ x: vx - fs * 0.95, y: c.vStart - vw - fs * 0.35,
+                    w: fs * 1.35, h: vw + fs * 0.7 }, PLATE);
     }
-    out += '<text x="' + n(vx) + '" y="' + n(c.vStart) + '" transform="rotate(-90 ' +
-      n(vx) + ' ' + n(c.vStart) + ')">' + esc(c.v) + '</text>';
+    out += '<text xml:space="preserve" x="' + n(vx) + '" y="' + n(c.vStart) +
+      '" transform="rotate(-90 ' + n(vx) + ' ' + n(c.vStart) + ')">' +
+      itemsSpans(c.v, C) + '</text>';
 
     return '<g id="measurements" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" ' +
       'font-size="' + n(fs) + '" fill="' + C.dim + '">' + out + '</g>';
@@ -266,9 +302,13 @@ window.Render = (function () {
     /* baseline */
     if (L.baseline && s.baselineOn && g.baselines > 0) {
       var d = [];
-      for (var k = 0; k < g.baselines; k++) {
-        var by = g.guide.y + s.baselineStart + k * s.baseline;
-        d.push('M' + n(g.guide.x) + ' ' + n(by) + 'H' + n(g.guide.x + g.guide.w));
+      var bands = g.perRow ? s.rows : 1;
+      for (var bi = 0; bi < bands; bi++) {
+        var top = g.perRow ? rowY(g, s, bi) : g.guide.y;
+        for (var k = 0; k < g.perBand; k++) {
+          var by = top + s.baselineStart + k * s.baseline;
+          d.push('M' + n(g.guide.x) + ' ' + n(by) + 'H' + n(g.guide.x + g.guide.w));
+        }
       }
       o.push('<g id="baseline"><path d="' + d.join('') + '" fill="none" stroke="' + C.base +
         '" stroke-width="' + n(hair * 0.7) + '"/></g>');
