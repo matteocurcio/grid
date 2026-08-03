@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grid — Layout System Generator</title>
+<meta name="description" content="Generate print and screen layout grids — margins, bleed, columns, rows — and export them as SVG, transparent PNG or JPG.">
+<meta name="theme-color" content="#1c1c1c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c1c1c'/%3E%3Cg stroke='%233ecf8e' stroke-width='2'%3E%3Cpath d='M6 6h20v20H6z' fill='none'/%3E%3Cpath d='M13 6v20M19 6v20M6 13h20M6 19h20' opacity='.55'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="eyebrow">GRID · MATTEOCURCIO</div>
+    <h1>Layout Grid Generator</h1>
+  </div>
+  <div class="topbar-actions">
+    <button class="ghost-btn" id="btnReset" type="button" title="Reset to defaults">Reset</button>
+    <button class="ghost-btn icon-btn" id="btnTheme" type="button" title="Toggle theme" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="shell">
+
+  <!-- ─────────────── SIDEBAR ─────────────── -->
+  <aside class="panel" id="panel">
+
+    <section class="sect">
+      <div class="sect-head static">Preset Details</div>
+      <div class="sect-body">
+        <div class="field">
+          <input type="text" id="docName" class="name-input" value="Untitled-1" spellcheck="false" aria-label="Document name">
+        </div>
+        <div class="field">
+          <label for="pagePreset">Page Preset</label>
+          <div class="selwrap">
+            <select id="pagePreset"></select>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="w">Width</label>
+            <div class="numwrap" data-num="w">
+              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase width"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease width"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="w" inputmode="decimal" value="210">
+              <span class="unit" data-unitlabel>mm</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="unit">Units</label>
+            <div class="selwrap">
+              <select id="unit">
+                <option value="mm">Millimeters</option>
+                <option value="cm">Centimeters</option>
+                <option value="in">Inches</option>
+                <option value="pt">Points</option>
+                <option value="px">Pixels</option>
+              </select>
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+          </div>
+          <div class="field">
+            <label for="h">Height</label>
+            <div class="numwrap" data-num="h">
+              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase height"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease height"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="h" inputmode="decimal" value="297">
+              <span class="unit" data-unitlabel>mm</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Orientation</label>
+            <div class="orient">
+              <button type="button" id="oPortrait" class="on" title="Portrait" aria-label="Portrait">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="3.5" width="11" height="17" rx="1.5"/><circle cx="12" cy="9.5" r="2.2" class="fill"/><path d="M8.4 17.5c.5-2.4 1.9-3.6 3.6-3.6s3.1 1.2 3.6 3.6z" class="fill"/></svg>
+              </button>
+              <button type="button" id="oLandscape" title="Landscape" aria-label="Landscape">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6.5" width="17" height="11" rx="1.5"/><circle cx="12" cy="10.4" r="1.9" class="fill"/><path d="M8.7 16.5c.45-2 1.7-3 3.3-3s2.85 1 3.3 3z" class="fill"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="facing" checked><span class="box"></span>Facing Pages <em>(inside / outside margins)</em></label>
+      </div>
+    </section>
+
+    <section class="sect">
+      <div class="sect-head" data-toggle><svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Columns &amp; Rows</div>
+      <div class="sect-body">
+        <div class="field">
+          <label for="gridPreset">Grid Preset</label>
+          <div class="selwrap">
+            <select id="gridPreset"></select>
+            <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="cols">Columns</label>
+            <div class="numwrap" data-num="cols">
+              <span class="stepper"><button type="button" data-dir="1" aria-label="More columns"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Fewer columns"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="cols" inputmode="numeric" value="12">
+            </div>
+          </div>
+          <div class="field">
+            <label for="colGutter">Column Gutter</label>
+            <div class="numwrap" data-num="colGutter">
+              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase column gutter"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease column gutter"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="colGutter" inputmode="decimal" value="4.233">
+              <span class="unit" data-unitlabel>mm</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="rows">Rows</label>
+            <div class="numwrap" data-num="rows">
+              <span class="stepper"><button type="button" data-dir="1" aria-label="More rows"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Fewer rows"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="rows" inputmode="numeric" value="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="rowGutter">Row Gutter</label>
+            <div class="numwrap" data-num="rowGutter">
+              <span class="stepper"><button type="button" data-dir="1" aria-label="Increase row gutter"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease row gutter"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+              <input type="text" id="rowGutter" inputmode="decimal" value="4.233">
+              <span class="unit" data-unitlabel>mm</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Fit Guides To</label>
+          <div class="seg" id="fitTo">
+            <button type="button" data-v="margins" class="on">Margins</button>
+            <button type="button" data-v="page">Page</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sect">
+      <div class="sect-head" data-toggle><svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Margins</div>
+      <div class="sect-body">
+        <div class="linkgrid">
+          <div class="grid2">
+            <div class="field">
+              <label for="mT">Top</label>
+              <div class="numwrap" data-num="mT">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase top margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease top margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="mT" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="mB">Bottom</label>
+              <div class="numwrap" data-num="mB">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase bottom margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease bottom margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="mB" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="mI" data-mlabel="in">Inside</label>
+              <div class="numwrap" data-num="mI">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase inside margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease inside margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="mI" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="mO" data-mlabel="out">Outside</label>
+              <div class="numwrap" data-num="mO">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase outside margin"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease outside margin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="mO" inputmode="decimal" value="12.7"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="link-btn on" id="mLink" title="Make all settings the same" aria-label="Link margin values">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.2M14 11a5 5 0 0 0-7.07 0L4.8 13.1a5 5 0 0 0 7.07 7.07L13.3 18.8"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sect">
+      <div class="sect-head" data-toggle><svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Bleed</div>
+      <div class="sect-body">
+        <div class="linkgrid">
+          <div class="grid2">
+            <div class="field">
+              <label for="bT">Top</label>
+              <div class="numwrap" data-num="bT">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase top bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease top bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bT" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="bB">Bottom</label>
+              <div class="numwrap" data-num="bB">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase bottom bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease bottom bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bB" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="bI" data-mlabel="in">Inside</label>
+              <div class="numwrap" data-num="bI">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase inside bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease inside bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bI" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="bO" data-mlabel="out">Outside</label>
+              <div class="numwrap" data-num="bO">
+                <span class="stepper"><button type="button" data-dir="1" aria-label="Increase outside bleed"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" data-dir="-1" aria-label="Decrease outside bleed"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+                <input type="text" id="bO" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="link-btn on" id="bLink" title="Make all settings the same" aria-label="Link bleed values">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.2M14 11a5 5 0 0 0-7.07 0L4.8 13.1a5 5 0 0 0 7.07 7.07L13.3 18.8"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sect">
+      <div class="sect-head" data-toggle><svg class="tw" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Export</div>
+      <div class="sect-body">
+        <div class="field">
+          <label>Formats</label>
+          <div class="fmts">
+            <label class="check"><input type="checkbox" id="fSvg" checked><span class="box"></span>SVG <em>vector</em></label>
+            <label class="check"><input type="checkbox" id="fPng" checked><span class="box"></span>PNG <em>transparent</em></label>
+            <label class="check"><input type="checkbox" id="fJpg"><span class="box"></span>JPG <em>white</em></label>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field" id="dpiField">
+            <label for="dpi">Resolution</label>
+            <div class="selwrap">
+              <select id="dpi">
+                <option value="72">72 dpi — screen</option>
+                <option value="150">150 dpi — draft</option>
+                <option value="300" selected>300 dpi — print</option>
+                <option value="600">600 dpi — fine</option>
+              </select>
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+          </div>
+          <div class="field hide" id="scaleField">
+            <label for="scale">Scale</label>
+            <div class="selwrap">
+              <select id="scale">
+                <option value="1">1× — actual pixels</option>
+                <option value="2" selected>2× — retina</option>
+                <option value="3">3×</option>
+              </select>
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+          </div>
+          <div class="field">
+            <label for="styleSel">Guide Style</label>
+            <div class="selwrap">
+              <select id="styleSel">
+                <option value="color">Colour coded</option>
+                <option value="mono">Mono — single colour</option>
+              </select>
+              <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <label class="check"><input type="checkbox" id="incBleed" checked><span class="box"></span>Extend canvas to bleed</label>
+        <label class="check"><input type="checkbox" id="paper"><span class="box"></span>Include white paper</label>
+        <label class="check"><input type="checkbox" id="fills" checked><span class="box"></span>Tint column &amp; row fields</label>
+        <label class="check"><input type="checkbox" id="labels"><span class="box"></span>Number columns &amp; rows</label>
+
+        <button class="primary" id="btnDownload" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="dlLabel">Download 2 files</span>
+        </button>
+        <button class="ghost-btn wide" id="btnCss" type="button">Copy CSS Grid</button>
+      </div>
+    </section>
+
+    <footer class="panel-foot">
+      Built for layout people. <a href="https://matteocurcio.com" rel="noopener">matteocurcio.com</a>
+    </footer>
+  </aside>
+
+  <!-- ─────────────── PREVIEW ─────────────── -->
+  <div class="stage">
+    <div class="stage-bar">
+      <div class="legend" id="legend">
+        <button type="button" class="chip on" data-layer="trim"><i style="--c:var(--g-trim)"></i>Trim</button>
+        <button type="button" class="chip on" data-layer="bleed"><i style="--c:var(--g-bleed)"></i>Bleed</button>
+        <button type="button" class="chip on" data-layer="margins"><i style="--c:var(--g-margin)"></i>Margins</button>
+        <button type="button" class="chip on" data-layer="cols"><i style="--c:var(--g-col)"></i>Columns</button>
+        <button type="button" class="chip on" data-layer="rows"><i style="--c:var(--g-row)"></i>Rows</button>
+      </div>
+      <div class="zoom">
+        <button type="button" id="zOut" aria-label="Zoom out">−</button>
+        <span id="zVal" class="mono">Fit</span>
+        <button type="button" id="zIn" aria-label="Zoom in">+</button>
+        <button type="button" id="zFit" class="fit">Fit</button>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <div class="canvas-inner" id="canvasInner"></div>
+    </div>
+
+    <div class="readout" id="readout"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./js/units.js"></script>
+<script src="./js/presets.js"></script>
+<script src="./js/render.js"></script>
+<script src="./js/export.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
