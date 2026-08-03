@@ -13,7 +13,7 @@
 <!-- ?v= must be bumped with every release: the HTML is served uncached but the
      assets are cached for an hour, so without it a returning visitor gets new
      markup wired to stale CSS and JS. -->
-<link rel="stylesheet" href="./styles.css?v=0.2.3">
+<link rel="stylesheet" href="./styles.css?v=0.2.4">
 </head>
 <body>
 
@@ -261,6 +261,7 @@
           </div>
         </div>
         <label class="check"><input type="checkbox" id="baselinePerRow"><span class="box"></span>Restart on every row</label>
+        <label class="check hide" id="fromBottomRow"><input type="checkbox" id="baselineFromBottom"><span class="box"></span>Rule upward from each row's bottom</label>
         <p class="hint" id="baselineHint">Ruled from the top of the guide area, in the page's own units.</p>
       </div>
     </section>
@@ -361,10 +362,10 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="./js/units.js?v=0.2.3"></script>
-<script src="./js/presets.js?v=0.2.3"></script>
-<script src="./js/render.js?v=0.2.3"></script>
-<script src="./js/export.js?v=0.2.3"></script>
-<script src="./js/app.js?v=0.2.3"></script>
+<script src="./js/units.js?v=0.2.4"></script>
+<script src="./js/presets.js?v=0.2.4"></script>
+<script src="./js/render.js?v=0.2.4"></script>
+<script src="./js/export.js?v=0.2.4"></script>
+<script src="./js/app.js?v=0.2.4"></script>
 </body>
 </html>

@@ -241,6 +241,7 @@ button { cursor: pointer; }
 .check input:focus-visible + .box { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-green) 35%, transparent); }
 .check:hover { color: var(--c-ink); }
 .check.muted { opacity: .4; }
+.check.hide { display: none; }
 .fmts { display: grid; gap: 0; }
 
 /* primary */

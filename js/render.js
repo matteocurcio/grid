@@ -24,9 +24,34 @@ window.Render = (function () {
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  /* Monospace advance is a dependable 0.6 em, so text can be fitted without
-     measuring it for real — which the renderer has no way to do anyway. */
-  function textWidth(text, fs) { return text.length * fs * 0.6; }
+  var FONT = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+  var _ctx = null;
+
+  /* Estimating a monospace advance at 0.6 em is close but not exact — the "·"
+     and "×" separators fall back to a proportional glyph, which pushed the run
+     past the right margin. Measure it for real, falling back to the estimate
+     only if there is no canvas to measure with. */
+  function textWidth(text, fs, weight) {
+    try {
+      if (!_ctx) _ctx = document.createElement('canvas').getContext('2d');
+      _ctx.font = (weight || 400) + ' ' + fs + 'px ' + FONT;
+      var w = _ctx.measureText(text).width;
+      if (w > 0) return w;
+    } catch (e) {}
+    return text.length * fs * 0.6;
+  }
+
+  /* Width scales linearly with size, so measuring once at 100 gives a factor
+     that turns an available length straight into a font size. */
+  function widthPerSize(items) {
+    var w = 0;
+    for (var i = 0; i < items.length; i++) {
+      if (i) w += textWidth(GAP, 100);
+      w += textWidth(items[i].l, 100, 600);
+      w += textWidth(' ' + items[i].v, 100);
+    }
+    return (w / 100) * 1.01; /* a hair of slack against rounding */
+  }
 
   /* Captions read like the readout under the preview: a stronger label, a
      lighter value, and a generous gap between parameters. SVG collapses runs
@@ -90,10 +115,6 @@ window.Render = (function () {
       }
     }
     return p;
-  }
-
-  function itemsText(items) {
-    return items.map(function (i) { return i.l + ' ' + i.v; }).join(GAP);
   }
 
   function itemsSpans(items, C) {
@@ -181,19 +202,22 @@ window.Render = (function () {
 
     var hStrip = align ? s.margins.b : 0;
     var vStrip = align ? s.margins.o : 0;
+    /* Runs are confined margin to margin so they start and end flush with the
+       grid instead of bleeding out to the trim. The tighter axis — usually the
+       page's shorter side — therefore sets the size both captions share. */
     var hStart = align ? g.marginBox.x : g.page.x + inset;
     var vStart = align ? g.marginBox.y + g.marginBox.h : g.page.y + g.page.h - inset;
-    var hAlong = (g.page.x + g.page.w - inset) - hStart;
-    var vAlong = vStart - (g.page.y + inset);
+    var hAlong = align ? g.marginBox.w : g.page.w - inset * 2;
+    var vAlong = align ? g.marginBox.h : g.page.h - inset * 2;
 
     var inStrip = align && Math.min(hStrip, vStrip) * 0.34 >= minFs;
 
     function fit(withAlt) {
       var h = captionItems(s, g, 'h', withAlt), v = captionItems(s, g, 'v', withAlt);
-      var hLen = itemsText(h).length, vLen = itemsText(v).length;
-      var fs = Math.min(maxFs, hAlong / (hLen * 0.6), vAlong / (vLen * 0.6));
+      var hUnit = widthPerSize(h), vUnit = widthPerSize(v);
+      var fs = Math.min(maxFs, hAlong / hUnit, vAlong / vUnit);
       if (inStrip) fs = Math.min(fs, hStrip * 0.34, vStrip * 0.34);
-      return { fs: fs, h: h, v: v, hLen: hLen, vLen: vLen };
+      return { fs: fs, h: h, v: v, hUnit: hUnit, vUnit: vUnit };
     }
 
     var r = fit(true);
@@ -202,14 +226,14 @@ window.Render = (function () {
       if (compact.fs > r.fs) r = compact;
     }
 
-    return { fs: r.fs, h: r.h, v: r.v, hLen: r.hLen, vLen: r.vLen,
+    return { fs: r.fs, h: r.h, v: r.v, hUnit: r.hUnit, vUnit: r.vUnit,
              inStrip: inStrip, align: align,
              hStart: hStart, vStart: vStart, hStrip: hStrip, vStrip: vStrip };
   }
 
   function captionSVG(s, g, C) {
     var c = captions(s, g), fs = c.fs, out = '';
-    var hw = c.hLen * fs * 0.6, vw = c.vLen * fs * 0.6;
+    var hw = c.hUnit * fs, vw = c.vUnit * fs;
 
     var hy;
     if (c.inStrip) {
@@ -303,10 +327,17 @@ window.Render = (function () {
     if (L.baseline && s.baselineOn && g.baselines > 0) {
       var d = [];
       var bands = g.perRow ? s.rows : 1;
+      var bandH = g.perRow ? g.rowH : g.guide.h;
+      /* Ruling upward from each row's bottom lands the last baseline on the row
+         edge, which is what you want when text bottoms align across a spread.
+         Only meaningful per row — a single band has no bottom to key off. */
+      var upward = g.perRow && s.baselineFromBottom;
       for (var bi = 0; bi < bands; bi++) {
         var top = g.perRow ? rowY(g, s, bi) : g.guide.y;
         for (var k = 0; k < g.perBand; k++) {
-          var by = top + s.baselineStart + k * s.baseline;
+          var by = upward
+            ? top + bandH - s.baselineStart - k * s.baseline
+            : top + s.baselineStart + k * s.baseline;
           d.push('M' + n(g.guide.x) + ' ' + n(by) + 'H' + n(g.guide.x + g.guide.w));
         }
       }
