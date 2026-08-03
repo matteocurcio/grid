@@ -24,53 +24,59 @@ window.Render = (function () {
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  /* "27.43mm/324px" — the page's own unit, then pixels at the export
-     resolution. Pixel documents get millimetres as the second reading. */
-  function pair(v, s) {
-    var primary = Units.format(v, s.unit) + s.unit;
-    var secondary = s.unit === 'px'
-      ? Units.format(Units.convert(v, 'px', 'mm'), 'mm') + 'mm'
-      : Math.round(Units.toPixels(v, s.unit, s.exp.dpi)) + 'px';
-    return primary + '/' + secondary;
-  }
-
-  function measure(name, v, s) { return name + ' ' + pair(v, s); }
-
   /* Monospace advance is a dependable 0.6 em, so text can be fitted without
      measuring it for real — which the renderer has no way to do anyway. */
   function textWidth(text, fs) { return text.length * fs * 0.6; }
 
-  function hText(s, g) {
-    var p = ['W ' + pair(s.w, s)];
-    if (s.bleedOn && (s.bleed.i || s.bleed.o))
-      p.push('bleed ' + (s.bleed.i === s.bleed.o ? pair(s.bleed.i, s)
-        : pair(s.bleed.i, s) + ' / ' + pair(s.bleed.o, s)));
-    if (s.marginsOn && g.marginsFit) {
-      p.push('margin ' + (s.margins.i === s.margins.o ? pair(s.margins.i, s)
-        : pair(s.margins.i, s) + ' / ' + pair(s.margins.o, s)));
-      p.push('content ' + pair(g.marginBox.w, s));
-    }
-    if (s.cols > 0 && g.colsFit) p.push(s.cols + ' col ' + pair(g.colW, s));
-    if (s.cols > 1 && g.colsFit) p.push('gutter ' + pair(s.colGutter, s));
-    if (s.unit !== 'px') p.push('@' + s.exp.dpi + 'dpi');
-    return p.join('  ·  ');
+  /* Captions read like the readout under the preview: "Column 27.43 mm",
+     with the pixel equivalent at the export resolution appended. */
+  var GAP = '   ';
+
+  function val(v, s) { return Units.format(v, s.unit) + ' ' + s.unit; }
+
+  function alt(v, s) {
+    return s.unit === 'px'
+      ? Units.format(Units.convert(v, 'px', 'mm'), 'mm') + ' mm'
+      : Math.round(Units.toPixels(v, s.unit, s.exp.dpi)) + ' px';
   }
 
-  function vText(s, g) {
-    var p = ['H ' + pair(s.h, s)];
-    if (s.bleedOn && (s.bleed.t || s.bleed.b))
-      p.push('bleed ' + (s.bleed.t === s.bleed.b ? pair(s.bleed.t, s)
-        : pair(s.bleed.t, s) + ' / ' + pair(s.bleed.b, s)));
-    if (s.marginsOn && g.marginsFit) {
-      p.push('margin ' + (s.margins.t === s.margins.b ? pair(s.margins.t, s)
-        : pair(s.margins.t, s) + ' / ' + pair(s.margins.b, s)));
-      p.push('content ' + pair(g.marginBox.h, s));
+  function read(name, v, s, withAlt) {
+    return name + ' ' + val(v, s) + (withAlt ? ' · ' + alt(v, s) : '');
+  }
+
+  /* Asymmetric pairs drop the pixel reading rather than double its length. */
+  function readPair(name, a, b, s, withAlt) {
+    if (a === b) return read(name, a, s, withAlt);
+    return name + ' ' + Units.format(a, s.unit) + ' / ' + Units.format(b, s.unit) + ' ' + s.unit;
+  }
+
+  function caption(s, g, axis, withAlt) {
+    var p = [];
+    if (axis === 'h') {
+      p.push(read('Width', s.w, s, withAlt));
+      if (s.bleedOn && (s.bleed.i || s.bleed.o))
+        p.push(readPair('Bleed', s.bleed.i, s.bleed.o, s, withAlt));
+      if (s.marginsOn && g.marginsFit) {
+        p.push(readPair('Margin', s.margins.i, s.margins.o, s, withAlt));
+        p.push(read('Content', g.marginBox.w, s, withAlt));
+      }
+      if (s.cols > 0 && g.colsFit) p.push(read('Column', g.colW, s, withAlt) + ' × ' + s.cols);
+      if (s.cols > 1 && g.colsFit) p.push(read('Gutter', s.colGutter, s, withAlt));
+      if (s.unit !== 'px' && withAlt) p.push(s.exp.dpi + ' dpi');
+    } else {
+      p.push(read('Height', s.h, s, withAlt));
+      if (s.bleedOn && (s.bleed.t || s.bleed.b))
+        p.push(readPair('Bleed', s.bleed.t, s.bleed.b, s, withAlt));
+      if (s.marginsOn && g.marginsFit) {
+        p.push(readPair('Margin', s.margins.t, s.margins.b, s, withAlt));
+        p.push(read('Content', g.marginBox.h, s, withAlt));
+      }
+      if (s.rows > 0 && g.rowsFit) p.push(read('Row', g.rowH, s, withAlt) + ' × ' + s.rows);
+      if (s.rows > 1 && g.rowsFit) p.push(read('Gutter', s.rowGutter, s, withAlt));
+      if (s.baselineOn && g.baselines > 0)
+        p.push(read('Baseline', s.baseline, s, withAlt) + ' × ' + g.baselines);
     }
-    if (s.rows > 0 && g.rowsFit) p.push(s.rows + ' row ' + pair(g.rowH, s));
-    if (s.rows > 1 && g.rowsFit) p.push('gutter ' + pair(s.rowGutter, s));
-    if (s.baselineOn && g.baselines > 0)
-      p.push('baseline ' + pair(s.baseline, s) + ' ×' + g.baselines);
-    return p.join('  ·  ');
+    return p.join(GAP);
   }
 
   /* All boxes in document units. Origin is the top-left of the exported canvas. */
@@ -129,61 +135,71 @@ window.Render = (function () {
      the guides are fitted to the page) the reading moves just inside the last
      row / last column and takes a backing plate with it, so it still never
      sits on top of a guide. */
-  function place(s, g, text, axis) {
+  var PLATE = 'fill="#ffffff" fill-opacity="0.9"';
+
+  /* Both captions share one size, so the sheet reads as a pair rather than two
+     unrelated notes. That means fitting against the tighter of the two axes —
+     which is what keeps it working on short or narrow pages. When even the
+     compact wording won't fit legibly, the runs step inside the last row and
+     column and take a backing plate with them. */
+  function captions(s, g) {
     var span = Math.max(s.w, s.h);
     var maxFs = span / 85, minFs = span / 175;
     var inset = span * 0.012;
-    var useStrip = s.marginsOn && s.fitTo !== 'page' && g.marginsFit;
-    var strip = useStrip ? (axis === 'h' ? s.margins.b : s.margins.o) : 0;
-    var inStrip = strip * 0.34 >= minFs;
+    var align = s.marginsOn && s.fitTo !== 'page' && g.marginsFit;
 
-    /* The run starts at the content edge and ends at the trim, so the type has
-       to be sized against that remaining length — not the whole page — or it
-       overflows the trim on the right. */
-    var start, along;
-    if (axis === 'h') {
-      start = useStrip ? g.marginBox.x : g.page.x + inset;
-      along = (g.page.x + g.page.w - inset) - start;
-    } else {
-      start = useStrip ? g.marginBox.y + g.marginBox.h : g.page.y + g.page.h - inset;
-      along = start - (g.page.y + inset);
+    var hStrip = align ? s.margins.b : 0;
+    var vStrip = align ? s.margins.o : 0;
+    var hStart = align ? g.marginBox.x : g.page.x + inset;
+    var vStart = align ? g.marginBox.y + g.marginBox.h : g.page.y + g.page.h - inset;
+    var hAlong = (g.page.x + g.page.w - inset) - hStart;
+    var vAlong = vStart - (g.page.y + inset);
+
+    var inStrip = align && Math.min(hStrip, vStrip) * 0.34 >= minFs;
+
+    function fit(withAlt) {
+      var h = caption(s, g, 'h', withAlt), v = caption(s, g, 'v', withAlt);
+      var fs = Math.min(maxFs, hAlong / (h.length * 0.6), vAlong / (v.length * 0.6));
+      if (inStrip) fs = Math.min(fs, hStrip * 0.34, vStrip * 0.34);
+      return { fs: fs, h: h, v: v };
     }
 
-    var fs = Math.min(maxFs, along / (text.length * 0.6), inStrip ? strip * 0.34 : maxFs);
-    return { fs: fs, strip: strip, inStrip: inStrip, useStrip: useStrip,
-             start: start, width: textWidth(text, fs) };
+    var r = fit(true);
+    if (r.fs < minFs) {
+      var compact = fit(false);
+      if (compact.fs > r.fs) r = compact;
+    }
+
+    return { fs: r.fs, h: r.h, v: r.v, inStrip: inStrip, align: align,
+             hStart: hStart, vStart: vStart, hStrip: hStrip, vStrip: vStrip };
   }
 
-  function hLine(s, g) {
-    var text = hText(s, g);
-    var p = place(s, g, text, 'h');
-    var x = p.start, y, plate = '';
+  function captionSVG(s, g, C) {
+    var c = captions(s, g), fs = c.fs, out = '';
 
-    if (p.inStrip) {
-      y = g.page.y + g.page.h - p.strip / 2 + p.fs * 0.35;
+    var hy;
+    if (c.inStrip) {
+      hy = g.page.y + g.page.h - c.hStrip / 2 + fs * 0.35;
     } else {
-      y = g.page.y + g.page.h - (p.useStrip ? s.margins.b : 0) - p.fs * 0.7;
-      plate = rect({ x: x - p.fs * 0.35, y: y - p.fs * 0.95, w: p.width + p.fs * 0.7, h: p.fs * 1.35 },
-        'fill="#ffffff" fill-opacity="0.9"');
+      hy = g.page.y + g.page.h - (c.align ? s.margins.b : 0) - fs * 0.7;
+      out += rect({ x: c.hStart - fs * 0.35, y: hy - fs * 0.95,
+                    w: textWidth(c.h, fs) + fs * 0.7, h: fs * 1.35 }, PLATE);
     }
-    return plate + '<text x="' + n(x) + '" y="' + n(y) + '" font-size="' + n(p.fs) +
-      '">' + esc(text) + '</text>';
-  }
+    out += '<text x="' + n(c.hStart) + '" y="' + n(hy) + '">' + esc(c.h) + '</text>';
 
-  function vLine(s, g) {
-    var text = vText(s, g);
-    var p = place(s, g, text, 'v');
-    var y = p.start, x, plate = '';
-
-    if (p.inStrip) {
-      x = g.page.x + g.page.w - p.strip / 2 + p.fs * 0.35;
+    var vx;
+    if (c.inStrip) {
+      vx = g.page.x + g.page.w - c.vStrip / 2 + fs * 0.35;
     } else {
-      x = g.page.x + g.page.w - (p.useStrip ? s.margins.o : 0) - p.fs * 0.7;
-      plate = rect({ x: x - p.fs * 0.95, y: y - p.width - p.fs * 0.35, w: p.fs * 1.35, h: p.width + p.fs * 0.7 },
-        'fill="#ffffff" fill-opacity="0.9"');
+      vx = g.page.x + g.page.w - (c.align ? s.margins.o : 0) - fs * 0.7;
+      out += rect({ x: vx - fs * 0.95, y: c.vStart - textWidth(c.v, fs) - fs * 0.35,
+                    w: fs * 1.35, h: textWidth(c.v, fs) + fs * 0.7 }, PLATE);
     }
-    return plate + '<text x="' + n(x) + '" y="' + n(y) + '" font-size="' + n(p.fs) +
-      '" transform="rotate(-90 ' + n(x) + ' ' + n(y) + ')">' + esc(text) + '</text>';
+    out += '<text x="' + n(vx) + '" y="' + n(c.vStart) + '" transform="rotate(-90 ' +
+      n(vx) + ' ' + n(c.vStart) + ')">' + esc(c.v) + '</text>';
+
+    return '<g id="measurements" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" ' +
+      'font-size="' + n(fs) + '" fill="' + C.dim + '">' + out + '</g>';
   }
 
   /* opts: { sizing: 'unit' | {w,h} , layers: {...} } */
@@ -297,14 +313,11 @@ window.Render = (function () {
     }
 
     /* measurements, printed inside the page */
-    if (e.dims) {
-      o.push('<g id="measurements" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" ' +
-        'fill="' + C.dim + '">' + hLine(s, g, C) + vLine(s, g, C) + '</g>');
-    }
+    if (e.dims) o.push(captionSVG(s, g, C));
 
     o.push('</svg>');
     return o.join('');
   }
 
-  return { build: build, geometry: geometry, measure: measure, COLOR: COLOR };
+  return { build: build, geometry: geometry, COLOR: COLOR };
 })();
