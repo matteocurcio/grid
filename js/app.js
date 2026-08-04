@@ -14,7 +14,7 @@
       facing: false,
       cols: 6, colGutter: 4, rows: 6, rowGutter: 4,
       fitTo: 'margins',
-      marginsOn: true,
+      marginsOn: true, binding: 0,
       margins: { t: 12.7, b: 12.7, i: 12.7, o: 12.7 }, marginsLinked: true,
       bleedOn: false,
       bleed: { t: 3, b: 3, i: 3, o: 3 }, bleedLinked: true,
@@ -73,6 +73,8 @@
                 get: function () { return S.baseline; }, set: function (v) { S.baseline = v; } },
     baselineStart: { kind: 'len', min: 0, marks: 'page',
                      get: function () { return S.baselineStart; }, set: function (v) { S.baselineStart = v; } },
+    binding: { kind: 'len', min: 0,
+               get: function () { return S.binding; }, set: function (v) { S.binding = v; } },
     mT: margin('t'), mB: margin('b'), mI: margin('i'), mO: margin('o'),
     bT: bleed('t'), bB: bleed('b'), bI: bleed('i'), bO: bleed('o')
   };
@@ -174,7 +176,7 @@
     if (!p) return;
     var from = S.unit;
     S.unit = p.unit;
-    ['colGutter', 'rowGutter', 'baseline', 'baselineStart'].forEach(function (k) {
+    ['colGutter', 'rowGutter', 'baseline', 'baselineStart', 'binding'].forEach(function (k) {
       S[k] = Units.convert(S[k], from, S.unit);
     });
     /* A preset owns its stated orientation — "Desktop — 1440 × 1024" should
@@ -199,7 +201,7 @@
   function changeUnit(to) {
     var from = S.unit;
     if (from === to) return;
-    ['w', 'h', 'colGutter', 'rowGutter', 'baseline', 'baselineStart'].forEach(function (k) {
+    ['w', 'h', 'colGutter', 'rowGutter', 'baseline', 'baselineStart', 'binding'].forEach(function (k) {
       S[k] = Units.convert(S[k], from, to);
     });
     ['margins', 'bleed'].forEach(function (grp) {
@@ -274,6 +276,7 @@
     $('unit').value = S.unit;
     $('docName').value = S.name;
 
+    $('bindingField').classList.toggle('hide', !S.facing);
     document.querySelectorAll('[data-mlabel="in"]').forEach(function (el) { el.textContent = S.facing ? 'Inside' : 'Left'; });
     document.querySelectorAll('[data-mlabel="out"]').forEach(function (el) { el.textContent = S.facing ? 'Outside' : 'Right'; });
 

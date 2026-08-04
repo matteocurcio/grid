@@ -4,13 +4,13 @@ window.Render = (function () {
 
   var COLOR = {
     trim: '#9a9a97', bleed: '#ff5b5b', margin: '#ff3ea5',
-    col: '#7c6cf6', row: '#22c7d6', base: '#e8a33d',
+    col: '#7c6cf6', row: '#22c7d6', base: '#e8a33d', spine: '#7a7a77',
     label: '#8f8f8c', dim: '#8a8a87', dimLabel: '#4a4a47',
     colFill: 'rgba(124,108,246,0.10)', rowFill: 'rgba(34,199,214,0.10)'
   };
   var MONO = {
     trim: '#9a9a97', bleed: '#9a9a97', margin: '#9a9a97',
-    col: '#9a9a97', row: '#9a9a97', base: '#9a9a97',
+    col: '#9a9a97', row: '#9a9a97', base: '#9a9a97', spine: '#9a9a97',
     label: '#8f8f8c', dim: '#8a8a87', dimLabel: '#4a4a47',
     colFill: 'rgba(154,154,151,0.10)', rowFill: 'rgba(154,154,151,0.10)'
   };
@@ -81,10 +81,12 @@ window.Render = (function () {
     var p = [];
     if (axis === 'h') {
       p.push(read('Width', s.w, s, withAlt));
+      if (g.facing) p.push(read('Spread', g.spread.w, s, withAlt));
       if (s.bleedOn && (s.bleed.i || s.bleed.o))
         p.push(readPair('Bleed', s.bleed.i, s.bleed.o, s, withAlt));
       if (s.marginsOn && g.marginsFit) {
         p.push(readPair('Margin', s.margins.i, s.margins.o, s, withAlt));
+        if (g.binding > 0) p.push(read('Binding', g.binding, s, withAlt));
         p.push(read('Content', g.marginBox.w, s, withAlt));
       }
       if (s.cols > 0 && g.colsFit) {
@@ -125,21 +127,43 @@ window.Render = (function () {
     }).join('');
   }
 
-  /* All boxes in document units. Origin is the top-left of the exported canvas. */
+  /* All boxes in document units. Origin is the top-left of the exported canvas.
+     Facing pages produce a spread: two pages of the document size side by side,
+     with the inside margin at the spine on both, so it mirrors. The binding
+     allowance widens both inside margins to cover what the bind swallows. */
   function geometry(s) {
     var m = s.marginsOn ? s.margins : ZERO;
     var b = s.bleedOn ? s.bleed : ZERO;
     var inc = s.exp.includeBleed && s.bleedOn;
-    var bl = { t: inc ? b.t : 0, b: inc ? b.b : 0, l: inc ? b.i : 0, r: inc ? b.o : 0 };
+    var facing = !!s.facing;
+    var count = facing ? 2 : 1;
+    var bind = (s.marginsOn && facing) ? (s.binding || 0) : 0;
+
+    /* A spread has no bleed at the spine — its two outer edges both trim. */
+    var outerL = facing ? b.o : b.i;
+    var bl = { t: inc ? b.t : 0, b: inc ? b.b : 0, l: inc ? outerL : 0, r: inc ? b.o : 0 };
 
     var ox = bl.l, oy = bl.t;
-    var pageW = s.w + bl.l + bl.r;
+    var sheetW = s.w * count;
+    var pageW = sheetW + bl.l + bl.r;
     var pageH = s.h + bl.t + bl.b;
 
-    var page = { x: ox, y: oy, w: s.w, h: s.h };
-    var bleedBox = { x: ox - b.i, y: oy - b.t, w: s.w + b.i + b.o, h: s.h + b.t + b.b };
-    var marginBox = { x: ox + m.i, y: oy + m.t, w: s.w - m.i - m.o, h: s.h - m.t - m.b };
-    var guide = s.fitTo === 'page' ? page : marginBox;
+    var spread = { x: ox, y: oy, w: sheetW, h: s.h };
+    var bleedBox = { x: ox - outerL, y: oy - b.t,
+                     w: sheetW + outerL + b.o, h: s.h + b.t + b.b };
+
+    var pages = [];
+    for (var pi = 0; pi < count; pi++) {
+      var px = ox + pi * s.w, left, right;
+      if (!facing) { left = m.i; right = m.o; }
+      else if (pi === 0) { left = m.o; right = m.i + bind; }  /* verso: spine on the right */
+      else { left = m.i + bind; right = m.o; }                /* recto: spine on the left  */
+      var pbox = { x: px, y: oy, w: s.w, h: s.h };
+      var mbox = { x: px + left, y: oy + m.t, w: s.w - left - right, h: s.h - m.t - m.b };
+      pages.push({ page: pbox, marginBox: mbox, guide: s.fitTo === 'page' ? pbox : mbox });
+    }
+
+    var page = pages[0].page, marginBox = pages[0].marginBox, guide = pages[0].guide;
 
     var colW = s.cols > 0 ? (guide.w - (s.cols - 1) * s.colGutter) / s.cols : guide.w;
     var rowH = s.rows > 0 ? (guide.h - (s.rows - 1) * s.rowGutter) / s.rows : guide.h;
@@ -160,6 +184,7 @@ window.Render = (function () {
 
     var g = {
       page: page, bleedBox: bleedBox, marginBox: marginBox, guide: guide,
+      pages: pages, spread: spread, facing: facing, binding: bind,
       colW: colW, rowH: rowH, colsFit: colsFit, rowsFit: rowsFit,
       baselines: baselines, perBand: perBand, perRow: perRow,
       marginsFit: marginBox.w > 0 && marginBox.h > 0,
@@ -172,8 +197,10 @@ window.Render = (function () {
     return g;
   }
 
-  function colX(g, s, i) { return g.guide.x + i * (g.colW + s.colGutter); }
-  function rowY(g, s, j) { return g.guide.y + j * (g.rowH + s.rowGutter); }
+  /* Column and row positions are relative to a page's own guide box, so a
+     spread lays the same grid down twice. */
+  function colX(g, s, i, gd) { return (gd || g.guide).x + i * (g.colW + s.colGutter); }
+  function rowY(g, s, j, gd) { return (gd || g.guide).y + j * (g.rowH + s.rowGutter); }
 
   function rect(box, attrs) {
     return '<rect x="' + n(box.x) + '" y="' + n(box.y) + '" width="' + n(box.w) +
@@ -203,12 +230,14 @@ window.Render = (function () {
     var hStrip = align ? s.margins.b : 0;
     var vStrip = align ? s.margins.o : 0;
     /* Runs are confined margin to margin so they start and end flush with the
-       grid instead of bleeding out to the trim. The tighter axis — usually the
-       page's shorter side — therefore sets the size both captions share. */
-    var hStart = align ? g.marginBox.x : g.page.x + inset;
-    var vStart = align ? g.marginBox.y + g.marginBox.h : g.page.y + g.page.h - inset;
-    var hAlong = align ? g.marginBox.w : g.page.w - inset * 2;
-    var vAlong = align ? g.marginBox.h : g.page.h - inset * 2;
+       grid instead of bleeding out to the trim. On a spread that means from the
+       first page's left margin to the last page's right margin. The tighter
+       axis therefore sets the size both captions share. */
+    var last = g.pages[g.pages.length - 1];
+    var hStart = align ? g.marginBox.x : g.spread.x + inset;
+    var vStart = align ? g.marginBox.y + g.marginBox.h : g.spread.y + g.spread.h - inset;
+    var hAlong = align ? (last.marginBox.x + last.marginBox.w) - hStart : g.spread.w - inset * 2;
+    var vAlong = align ? g.marginBox.h : g.spread.h - inset * 2;
 
     var inStrip = align && Math.min(hStrip, vStrip) * 0.34 >= minFs;
 
@@ -237,9 +266,9 @@ window.Render = (function () {
 
     var hy;
     if (c.inStrip) {
-      hy = g.page.y + g.page.h - c.hStrip / 2 + fs * 0.35;
+      hy = g.spread.y + g.spread.h - c.hStrip / 2 + fs * 0.35;
     } else {
-      hy = g.page.y + g.page.h - (c.align ? s.margins.b : 0) - fs * 0.7;
+      hy = g.spread.y + g.spread.h - (c.align ? s.margins.b : 0) - fs * 0.7;
       out += rect({ x: c.hStart - fs * 0.35, y: hy - fs * 0.95,
                     w: hw + fs * 0.7, h: fs * 1.35 }, PLATE);
     }
@@ -248,9 +277,9 @@ window.Render = (function () {
 
     var vx;
     if (c.inStrip) {
-      vx = g.page.x + g.page.w - c.vStrip / 2 + fs * 0.35;
+      vx = g.spread.x + g.spread.w - c.vStrip / 2 + fs * 0.35;
     } else {
-      vx = g.page.x + g.page.w - (c.align ? s.margins.o : 0) - fs * 0.7;
+      vx = g.spread.x + g.spread.w - (c.align ? s.margins.o : 0) - fs * 0.7;
       out += rect({ x: vx - fs * 0.95, y: c.vStart - vw - fs * 0.35,
                     w: fs * 1.35, h: vw + fs * 0.7 }, PLATE);
     }
@@ -290,7 +319,7 @@ window.Render = (function () {
     /* paper */
     if (e.paper) {
       var sheet = (e.includeBleed && s.bleedOn)
-        ? { x: 0, y: 0, w: g.canvasW, h: g.canvasH } : g.page;
+        ? { x: 0, y: 0, w: g.canvasW, h: g.canvasH } : g.spread;
       o.push('<g id="paper">' + rect(sheet, 'fill="#ffffff"') + '</g>');
     }
 
@@ -301,25 +330,29 @@ window.Render = (function () {
           '" stroke-dasharray="' + n(hair * 7) + ' ' + n(hair * 5) + '"') + '</g>');
     }
 
-    /* columns */
+    /* columns — laid down once per page of the spread */
     if (L.cols && s.cols > 0 && g.colsFit) {
       var cparts = [];
-      for (var i = 0; i < s.cols; i++) {
-        cparts.push(rect({ x: colX(g, s, i), y: g.guide.y, w: g.colW, h: g.guide.h },
-          'fill="' + (e.fills ? C.colFill : 'none') + '" stroke="' + C.col +
-          '" stroke-width="' + n(hair) + '"'));
-      }
+      g.pages.forEach(function (pg) {
+        for (var i = 0; i < s.cols; i++) {
+          cparts.push(rect({ x: colX(g, s, i, pg.guide), y: pg.guide.y, w: g.colW, h: pg.guide.h },
+            'fill="' + (e.fills ? C.colFill : 'none') + '" stroke="' + C.col +
+            '" stroke-width="' + n(hair) + '"'));
+        }
+      });
       o.push('<g id="columns">' + cparts.join('') + '</g>');
     }
 
     /* rows */
     if (L.rows && s.rows > 0 && g.rowsFit) {
       var rparts = [];
-      for (var j = 0; j < s.rows; j++) {
-        rparts.push(rect({ x: g.guide.x, y: rowY(g, s, j), w: g.guide.w, h: g.rowH },
-          'fill="' + (e.fills ? C.rowFill : 'none') + '" stroke="' + C.row +
-          '" stroke-width="' + n(hair) + '"'));
-      }
+      g.pages.forEach(function (pg) {
+        for (var j = 0; j < s.rows; j++) {
+          rparts.push(rect({ x: pg.guide.x, y: rowY(g, s, j, pg.guide), w: pg.guide.w, h: g.rowH },
+            'fill="' + (e.fills ? C.rowFill : 'none') + '" stroke="' + C.row +
+            '" stroke-width="' + n(hair) + '"'));
+        }
+      });
       o.push('<g id="rows">' + rparts.join('') + '</g>');
     }
 
@@ -332,54 +365,67 @@ window.Render = (function () {
          edge, which is what you want when text bottoms align across a spread.
          Only meaningful per row — a single band has no bottom to key off. */
       var upward = g.perRow && s.baselineFromBottom;
-      for (var bi = 0; bi < bands; bi++) {
-        var top = g.perRow ? rowY(g, s, bi) : g.guide.y;
-        for (var k = 0; k < g.perBand; k++) {
-          var by = upward
-            ? top + bandH - s.baselineStart - k * s.baseline
-            : top + s.baselineStart + k * s.baseline;
-          d.push('M' + n(g.guide.x) + ' ' + n(by) + 'H' + n(g.guide.x + g.guide.w));
+      g.pages.forEach(function (pg) {
+        for (var bi = 0; bi < bands; bi++) {
+          var top = g.perRow ? rowY(g, s, bi, pg.guide) : pg.guide.y;
+          for (var k = 0; k < g.perBand; k++) {
+            var by = upward
+              ? top + bandH - s.baselineStart - k * s.baseline
+              : top + s.baselineStart + k * s.baseline;
+            d.push('M' + n(pg.guide.x) + ' ' + n(by) + 'H' + n(pg.guide.x + pg.guide.w));
+          }
         }
-      }
+      });
       o.push('<g id="baseline"><path d="' + d.join('') + '" fill="none" stroke="' + C.base +
         '" stroke-width="' + n(hair * 0.7) + '"/></g>');
     }
 
     /* margins */
     if (L.margins && s.marginsOn && g.marginsFit) {
-      o.push('<g id="margins">' + rect(g.marginBox, 'fill="none" stroke="' + C.margin +
-        '" stroke-width="' + n(hair * 1.1) + '"') + '</g>');
+      o.push('<g id="margins">' + g.pages.map(function (pg) {
+        return rect(pg.marginBox, 'fill="none" stroke="' + C.margin +
+          '" stroke-width="' + n(hair * 1.1) + '"');
+      }).join('') + '</g>');
     }
 
-    /* trim */
+    /* trim, and the spine where the two pages meet */
     if (L.trim) {
-      o.push('<g id="trim">' + rect(g.page, 'fill="none" stroke="' + C.trim +
-        '" stroke-width="' + n(edge) + '"') + '</g>');
+      var tparts = g.pages.map(function (pg) {
+        return rect(pg.page, 'fill="none" stroke="' + C.trim + '" stroke-width="' + n(edge) + '"');
+      });
+      if (g.facing) {
+        var sx = g.spread.x + s.w;
+        tparts.push('<path d="M' + n(sx) + ' ' + n(g.spread.y) + 'V' + n(g.spread.y + g.spread.h) +
+          '" fill="none" stroke="' + C.spine + '" stroke-width="' + n(edge) +
+          '" stroke-dasharray="' + n(hair * 9) + ' ' + n(hair * 6) + '"/>');
+      }
+      o.push('<g id="trim">' + tparts.join('') + '</g>');
     }
 
-    /* numbering */
+    /* numbering — restarts on each page of the spread */
     if (e.labels && (s.cols > 1 || s.rows > 1)) {
       var lparts = [];
-      var outsideTop = g.guide.y >= fs * 1.5;
-      var outsideLeft = g.guide.x >= fs * 1.5;
       var ta = 'font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="' + n(fs) +
         '" fill="' + C.label + '"';
-
-      if (s.cols > 1 && g.colsFit) {
-        for (var ci = 0; ci < s.cols; ci++) {
-          var cx = colX(g, s, ci) + g.colW / 2;
-          var cy = outsideTop ? g.guide.y - fs * 0.45 : g.guide.y + fs * 1.15;
-          lparts.push('<text x="' + n(cx) + '" y="' + n(cy) + '" text-anchor="middle" ' + ta + '>' + (ci + 1) + '</text>');
+      g.pages.forEach(function (pg) {
+        var outsideTop = pg.guide.y >= fs * 1.5;
+        var outsideLeft = (pg.guide.x - pg.page.x) >= fs * 1.5;
+        if (s.cols > 1 && g.colsFit) {
+          for (var ci = 0; ci < s.cols; ci++) {
+            var cx = colX(g, s, ci, pg.guide) + g.colW / 2;
+            var cy = outsideTop ? pg.guide.y - fs * 0.45 : pg.guide.y + fs * 1.15;
+            lparts.push('<text x="' + n(cx) + '" y="' + n(cy) + '" text-anchor="middle" ' + ta + '>' + (ci + 1) + '</text>');
+          }
         }
-      }
-      if (s.rows > 1 && g.rowsFit) {
-        for (var rj = 0; rj < s.rows; rj++) {
-          var ry = rowY(g, s, rj) + g.rowH / 2 + fs * 0.35;
-          var rx = outsideLeft ? g.guide.x - fs * 0.45 : g.guide.x + fs * 0.4;
-          lparts.push('<text x="' + n(rx) + '" y="' + n(ry) + '" text-anchor="' +
-            (outsideLeft ? 'end' : 'start') + '" ' + ta + '>' + (rj + 1) + '</text>');
+        if (s.rows > 1 && g.rowsFit) {
+          for (var rj = 0; rj < s.rows; rj++) {
+            var ry = rowY(g, s, rj, pg.guide) + g.rowH / 2 + fs * 0.35;
+            var rx = outsideLeft ? pg.guide.x - fs * 0.45 : pg.guide.x + fs * 0.4;
+            lparts.push('<text x="' + n(rx) + '" y="' + n(ry) + '" text-anchor="' +
+              (outsideLeft ? 'end' : 'start') + '" ' + ta + '>' + (rj + 1) + '</text>');
+          }
         }
-      }
+      });
       o.push('<g id="labels">' + lparts.join('') + '</g>');
     }
 

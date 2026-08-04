@@ -135,6 +135,7 @@ button { cursor: pointer; }
 .sect.off .sect-body { opacity: .38; pointer-events: none; }
 
 .hint { margin: 2px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--c-faint); }
+.field > label .sub { color: var(--c-faint); font-style: normal; font-weight: 400; }
 
 .field { margin-bottom: 12px; min-width: 0; }
 .field.hide { display: none; }

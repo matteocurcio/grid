@@ -4,7 +4,7 @@ A browser tool that builds print and screen layout grids the way InDesign's *New
 and *Create Guides* dialogs do — page size, margins, bleed, columns, rows and a baseline —
 and exports them as SVG, transparent PNG or JPG.
 
-Live at **grid.matteocurcio.com**. Current revision **rev0.3**.
+Live at **grid.matteocurcio.com**. Current revision **rev0.4**.
 
 Every change bumps the rev badge by one decimal point — it appears in the `<h1>` and the
 panel footer — and the `?v=` on the asset URLs moves with it. The badge is how you tell a
@@ -20,6 +20,11 @@ deployed build apart on refresh; the `?v=` is what makes that reliable.
   column, Swiss 4 × 8, Müller-Brockmann 6 × 6, magazine 6 × 9, newspaper 5), landscape
   print (slide 12 × 6, panorama 16 × 9, spread 8) and web (Bootstrap, Material, Tailwind,
   tablet 8, mobile 4, modular 12 × 8).
+- **Facing pages** — turns the document into a spread: two pages of the document size side
+  by side, joined at a spine drawn down the centre. The inside margin sits at the spine on
+  both, so the margins mirror, and each page carries its own columns, rows and baseline. A
+  **binding allowance** widens both inside margins to cover what the bind swallows. Bleed
+  on a spread applies to the two outer edges only — nothing bleeds at the spine.
 - **Margins, bleed and baseline switch on and off** as whole features, from the switch in
   each section header. Margins start on; bleed and baseline start off. A disabled section
   keeps its values but contributes nothing to the geometry, so turning bleed off gives a

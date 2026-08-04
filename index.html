@@ -13,14 +13,14 @@
 <!-- ?v= must be bumped with every release: the HTML is served uncached but the
      assets are cached for an hour, so without it a returning visitor gets new
      markup wired to stale CSS and JS. -->
-<link rel="stylesheet" href="./styles.css?v=0.3">
+<link rel="stylesheet" href="./styles.css?v=0.4">
 </head>
 <body>
 
 <header class="topbar">
   <div class="brand">
     <div class="eyebrow">GRID · MATTEOCURCIO</div>
-    <h1>Layout Grid Generator <span class="rev">rev0.3</span></h1>
+    <h1>Layout Grid Generator <span class="rev">rev0.4</span></h1>
   </div>
   <div class="topbar-actions">
     <button class="ghost-btn" id="btnReset" type="button" title="Reset to defaults">Reset</button>
@@ -191,6 +191,13 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.2M14 11a5 5 0 0 0-7.07 0L4.8 13.1a5 5 0 0 0 7.07 7.07L13.3 18.8"/></svg>
           </button>
         </div>
+        <div class="field hide" id="bindingField">
+          <label for="binding">Binding Allowance <em class="sub">— extra space at the spine</em></label>
+          <div class="numwrap" data-num="binding">
+            <span class="stepper"><button type="button" tabindex="-1" data-dir="1" aria-label="Increase binding allowance"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button><button type="button" tabindex="-1" data-dir="-1" aria-label="Decrease binding allowance"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button></span>
+            <input type="text" id="binding" inputmode="decimal" value="0"><span class="unit" data-unitlabel>mm</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -328,7 +335,7 @@
     </section>
 
     <footer class="panel-foot">
-      rev0.3 · Built for layout people. <a href="https://matteocurcio.com" rel="noopener">matteocurcio.com</a>
+      rev0.4 · Built for layout people. <a href="https://matteocurcio.com" rel="noopener">matteocurcio.com</a>
     </footer>
   </aside>
 
@@ -361,10 +368,10 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="./js/units.js?v=0.3"></script>
-<script src="./js/presets.js?v=0.3"></script>
-<script src="./js/render.js?v=0.3"></script>
-<script src="./js/export.js?v=0.3"></script>
-<script src="./js/app.js?v=0.3"></script>
+<script src="./js/units.js?v=0.4"></script>
+<script src="./js/presets.js?v=0.4"></script>
+<script src="./js/render.js?v=0.4"></script>
+<script src="./js/export.js?v=0.4"></script>
+<script src="./js/app.js?v=0.4"></script>
 </body>
 </html>
