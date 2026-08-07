@@ -2,3 +2,6 @@
 node_modules/
 .wrangler/
 *.log
+
+# local design-system pointer, not part of the published source
+DESIGN-SYSTEM.md
