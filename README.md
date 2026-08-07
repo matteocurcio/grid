@@ -62,17 +62,16 @@ Deployed as the Cloudflare Pages project `grid`, served at https://grid-96p.page
 (the `-96p` suffix is Cloudflare's — `grid.pages.dev` was already taken by another
 account) and fronted by `grid.matteocurcio.com`.
 
+The project is connected to `github.com/matteocurcio/Grid`, so **deploying is just pushing
+to `main`** — Cloudflare builds and publishes on its own. There is no build command and no
+output directory; it serves the repo root.
+
 ```bash
-wrangler pages deploy . --project-name=grid --branch production
+git push
 ```
 
-**Keep `--branch production` on every deploy.** The project's production branch is
-`production` but this repo's branch is `main`, and wrangler infers the branch from git.
-Without the flag a deploy is filed as a *preview* — it succeeds, prints a URL, and never
-reaches the live site. To drop the flag instead, change the production branch to `main`
-under the project's Settings → Builds & deployments.
-
-Run it from this directory, never from a parent — `.` is uploaded wholesale.
+Manual uploads with `wrangler pages deploy` are no longer the path and would sit outside
+the Git history. If you ever need one, run it from this directory — `.` uploads wholesale.
 
 `_headers` sets the security and cache headers, and only takes effect on Cloudflare, so
 it can't be tested locally. Everything now revalidates on each request.
@@ -89,6 +88,15 @@ is why the assets are now `max-age=0, must-revalidate`. Bumping `?v=` on release
 worth doing for browser caches, but it is not what makes a deploy safe.
 
 Long caching only becomes safe with content-hashed filenames, which needs a build step.
+
+**On `grid.matteocurcio.com` the zone overrides that anyway.** The custom domain returns
+`max-age=14400` on `.js` and `.css` regardless of `_headers`, because the zone's Browser
+Cache TTL applies to cacheable file types — `pages.dev` still honours `max-age=0`, so the
+two hosts disagree. Bumping `?v=` per release is what keeps this safe: a new query string
+is a new URL, so the four-hour cache on the old one never gets consulted. Ship a change
+without bumping and returning visitors can hold stale assets for four hours. To remove the
+hazard entirely, set Caching → Configuration → Browser Cache TTL to *Respect Existing
+Headers* on the `matteocurcio.com` zone.
 
 After any deploy, verify against the deployment-specific URL wrangler prints
 (`https://<hash>.grid-96p.pages.dev`) rather than the alias — the alias can lag behind
