@@ -4,7 +4,7 @@ A browser tool that builds print and screen layout grids the way InDesign's *New
 and *Create Guides* dialogs do — page size, margins, bleed, columns, rows and a baseline —
 and exports them as SVG, transparent PNG or JPG.
 
-Live at **grid.matteocurcio.com**. Current revision **rev0.4**.
+Live at **grid.matteocurcio.com**. Current revision **rev0.5**.
 
 Every change bumps the rev badge by one decimal point — it appears in the `<h1>` and the
 panel footer — and the `?v=` on the asset URLs moves with it. The badge is how you tell a
@@ -123,3 +123,5 @@ The preview and all three export formats come from one renderer in `js/render.js
 you see on screen is exactly what lands in the file. PNG and JPG are produced by drawing
 that same SVG onto a canvas, which is capped at 10 000 px on the long edge — beyond that
 browsers refuse to allocate the bitmap, and the readout says when a raster has been capped.
+
+Public footer: “Buy me a beer” links to PayPal for matteo.curcio@gmail.com. Optional support funds project maintenance, not a charity.
